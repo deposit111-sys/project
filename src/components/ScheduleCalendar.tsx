@@ -145,25 +145,38 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
         return false;
       }
       
-      // 检查日期范围是否包含当前日期
+      // 检查日期是否在租赁范围内
       if (dateStr < order.pickupDate || dateStr > order.returnDate) {
         return false;
       }
-      
-      // 如果是同一天，需要检查具体时间段
-      if (order.pickupDate === order.returnDate && order.pickupDate === dateStr) {
-        const timeOrder = { morning: 1, afternoon: 2, evening: 3 };
-        const currentSlot = timeOrder[timeSlot as keyof typeof timeOrder];
-        const pickupSlot = timeOrder[order.pickupTime];
-        const returnSlot = timeOrder[order.returnTime];
-        
-        return currentSlot >= pickupSlot && currentSlot <= returnSlot;
+
+      const timeOrder = { morning: 1, afternoon: 2, evening: 3 };
+      const currentSlot = timeOrder[timeSlot as keyof typeof timeOrder];
+      const pickupSlot = timeOrder[order.pickupTime];
+      const returnSlot = timeOrder[order.returnTime];
+
+      // 如果是取机当天
+      if (dateStr === order.pickupDate) {
+        // 如果取机和还机是同一天
+        if (order.pickupDate === order.returnDate) {
+          // 只有在取机时间段和还机时间段之间的时间段才被占用
+          return currentSlot >= pickupSlot && currentSlot <= returnSlot;
+        } else {
+          // 取机当天：从取机时间段开始的所有时间段都被占用
+          return currentSlot >= pickupSlot;
+        }
       }
       
-      return order.cameraModel === camera.model &&
-      order.cameraSerialNumber === camera.serialNumber &&
-      dateStr >= order.pickupDate && dateStr <= order.returnDate;
+      // 如果是还机当天
+      if (dateStr === order.returnDate) {
+        // 还机当天：到还机时间段为止的所有时间段都被占用
+        return currentSlot <= returnSlot;
+      }
+      
+      // 如果是中间的日期，整天都被占用
+      return true;
     });
+    
     return conflictingOrder ? 'occupied' : 'available';
   }, [orders]);
 
