@@ -443,11 +443,11 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
         >
           <thead>
             <tr>
-              <th className="border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 z-10 font-semibold">型号/编号</th>
+              <th className="border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 top-0 z-20 font-semibold">型号/编号</th>
               {daysInMonth.map(date => (
                 <th 
                   key={date.toISOString()} 
-                  className="border border-gray-300 py-2 px-3 bg-gray-50 min-w-[80px] font-semibold cursor-pointer hover:bg-gray-100 transition-colors duration-200"
+                  className="border border-gray-300 py-2 px-3 bg-gray-50 min-w-[80px] font-semibold cursor-pointer hover:bg-gray-100 transition-colors duration-200 sticky top-0 z-10"
                   onMouseEnter={(e) => handleMouseEnter(date, e)}
                   title="悬停查看当日订单详情"
                 >
