@@ -132,6 +132,41 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
     [cameras, selectedModel]
   );
 
+  // 对相机进行排序，与相机管理组件保持一致
+  const sortedCameras = useMemo(() => {
+    // 按型号分组
+    const groupedCameras = filteredCameras.reduce((acc, camera) => {
+      if (!acc[camera.model]) {
+        acc[camera.model] = [];
+      }
+      acc[camera.model].push(camera);
+      return acc;
+    }, {} as Record<string, CameraType[]>);
+
+    // 对每个型号的相机按编号降序排列
+    Object.keys(groupedCameras).forEach(model => {
+      groupedCameras[model].sort((a, b) => {
+        // 尝试按数字排序，如果不是数字则按字符串排序
+        const aNum = parseInt(a.serialNumber, 10);
+        const bNum = parseInt(b.serialNumber, 10);
+        
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return bNum - aNum; // 数字降序
+        } else {
+          return b.serialNumber.localeCompare(a.serialNumber); // 字符串降序
+        }
+      });
+    });
+
+    // 将分组后的相机重新组合成一个数组
+    const sortedCameraList: CameraType[] = [];
+    Object.keys(groupedCameras).sort().forEach(model => {
+      sortedCameraList.push(...groupedCameras[model]);
+    });
+
+    return sortedCameraList;
+  }, [filteredCameras]);
+
   // 检查某个相机在某个日期的状态
   const getScheduleStatus = useCallback((camera: Camera, date: Date, timeSlot: string) => {
     const year = date.getFullYear();
@@ -486,7 +521,7 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
             </tr>
           </thead>
           <tbody>
-            {filteredCameras.map(camera => (
+            {sortedCameras.map(camera => (
               <tr key={camera.id}>
                 <td className="border border-gray-300 p-3 bg-gray-50 sticky left-0 z-10">
                   <div className="text-sm">
