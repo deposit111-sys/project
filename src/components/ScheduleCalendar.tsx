@@ -447,17 +447,21 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
           fontSize: `${zoomLevel}%`,
           maxHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px',
           minHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px',
-          transform: `scale(${zoomLevel / 100})`,
-          transformOrigin: 'top left',
-          width: `${100 / (zoomLevel / 100)}%`,
-          height: `${100 / (zoomLevel / 100)}%`,
         }}
         onScroll={handleScroll}
       >
-        <table 
-          ref={calendarRef}
-          className="w-full border-collapse border border-gray-300"
+        <div
+          style={{
+            transform: `scale(${zoomLevel / 100})`,
+            transformOrigin: 'top left',
+            width: `${100 / (zoomLevel / 100)}%`,
+            height: `${100 / (zoomLevel / 100)}%`,
+          }}
         >
+          <table 
+            ref={calendarRef}
+            className="w-full border-collapse border border-gray-300"
+          >
           <thead>
             <tr>
               <th className="border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 top-0 z-20 font-semibold">型号/编号</th>
@@ -508,7 +512,8 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
 
       <div className="flex items-center justify-center space-x-6 text-sm">
