@@ -445,13 +445,13 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
         className="overflow-auto"
         style={{
           fontSize: `${zoomLevel}%`,
-          maxHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px'
+          maxHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px',
+          transform: `scale(${zoomLevel / 100})`,
+          transformOrigin: 'top left',
+          width: `${10000 / zoomLevel}%`,
+          height: `${10000 / zoomLevel}%`
         }}
         onScroll={handleScroll}
-            transform: `scale(${zoomLevel / 100})`,
-            transformOrigin: 'top left',
-            width: `${10000 / zoomLevel}%`,
-            height: `${10000 / zoomLevel}%`,
       >
         <table 
           ref={calendarRef}
