@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Camera, RentalOrder } from '../types';
 import { isDateInRange } from '../utils/dateUtils';
 import { Search, Calendar } from 'lucide-react';
+import { DatePicker } from './DatePicker';
 
 interface ScheduleSearchProps {
   cameras: Camera[];
@@ -39,11 +40,11 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
               <Calendar className="h-4 w-4 mr-1" />
               开始时间
             </label>
-            <input
-              type="date"
+            <DatePicker
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[150px] transition-colors duration-200"
+              placeholder="选择开始日期"
+              className="min-w-[150px]"
             />
           </div>
           <div>
@@ -51,11 +52,11 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
               <Calendar className="h-4 w-4 mr-1" />
               结束时间
             </label>
-            <input
-              type="date"
+            <DatePicker
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[150px] transition-colors duration-200"
+              placeholder="选择结束日期"
+              className="min-w-[150px]"
             />
           </div>
           <div>

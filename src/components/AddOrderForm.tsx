@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Camera, RentalOrder } from '../types';
 import { checkScheduleConflict } from '../utils/dateUtils';
 import { Plus, AlertCircle, CheckCircle } from 'lucide-react';
+import { DatePicker } from './DatePicker';
 
 interface AddOrderFormProps {
   cameras: Camera[];
@@ -227,12 +228,11 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">取机时间</label>
             <div className="flex space-x-2">
-              <input
-                type="date"
+              <DatePicker
                 value={formData.pickupDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, pickupDate: e.target.value }))}
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[180px] transition-colors duration-200 text-sm"
-               placeholder="选择取机日期"
+                placeholder="选择取机日期"
+                className="flex-1 min-w-[180px]"
                 required
               />
               <select
@@ -250,12 +250,11 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">还机时间</label>
             <div className="flex space-x-2">
-              <input
-                type="date"
+              <DatePicker
                 value={formData.returnDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, returnDate: e.target.value }))}
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[180px] transition-colors duration-200 text-sm"
-               placeholder="选择还机日期"
+                placeholder="选择还机日期"
+                className="flex-1 min-w-[180px]"
                 required
               />
               <select

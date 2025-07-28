@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RentalOrder } from '../types';
 import { formatDate } from '../utils/dateUtils';
 import { Calendar, CheckCircle2, Circle } from 'lucide-react';
+import { DatePicker } from './DatePicker';
 
 interface PickupReturnScheduleProps {
   orders: RentalOrder[];
@@ -58,11 +59,11 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
           <Calendar className="h-4 w-4 mr-1" />
           选择日期
         </label>
-        <input
-          type="date"
+        <DatePicker
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
-          className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[180px] transition-colors duration-200 text-sm"
+          placeholder="选择查看日期"
+          className="min-w-[180px]"
         />
       </div>
 

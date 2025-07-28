@@ -3,6 +3,7 @@ import { RentalOrder, Camera } from '../types';
 import { formatDateTime } from '../utils/dateUtils';
 import { checkScheduleConflict } from '../utils/dateUtils';
 import { Edit2, Trash2, X } from 'lucide-react';
+import { DatePicker } from './DatePicker';
 
 interface OrderManagementModalProps {
   isOpen: boolean;
@@ -268,11 +269,11 @@ export function OrderManagementModal({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">取机时间</label>
                   <div className="flex space-x-2">
-                    <input
-                      type="date"
+                    <DatePicker
                       value={formData.pickupDate || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, pickupDate: e.target.value }))}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="选择取机日期"
+                      className="flex-1"
                     />
                     <select
                       value={formData.pickupTime || 'morning'}
@@ -288,11 +289,11 @@ export function OrderManagementModal({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">还机时间</label>
                   <div className="flex space-x-2">
-                    <input
-                      type="date"
+                    <DatePicker
                       value={formData.returnDate || ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, returnDate: e.target.value }))}
-                      className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="选择还机日期"
+                      className="flex-1"
                     />
                     <select
                       value={formData.returnTime || 'morning'}
