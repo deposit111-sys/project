@@ -9,6 +9,7 @@ import { CameraManagement } from './components/CameraManagement';
 import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { ScheduleSearch } from './components/ScheduleSearch';
 import { PickupReturnSchedule } from './components/PickupReturnSchedule';
+import { DataManagement } from './components/DataManagement';
 import { exportToExcel } from './utils/exportUtils';
 
 function App() {
@@ -62,6 +63,10 @@ function App() {
     });
   };
 
+  const handleImportData = (importedCameras: CameraType[], importedOrders: RentalOrder[]) => {
+    setCameras(importedCameras);
+    setOrders(importedOrders);
+  };
   const handleExportExcel = () => {
     exportToExcel(orders);
   };
@@ -128,6 +133,13 @@ function App() {
               cameras={cameras}
               onAddCamera={addCamera}
               onDeleteCamera={deleteCamera}
+            />
+
+            {/* 数据管理 */}
+            <DataManagement
+              cameras={cameras}
+              orders={orders}
+              onImportData={handleImportData}
             />
           </div>
 
