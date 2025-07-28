@@ -68,14 +68,50 @@ export function checkScheduleConflict(
     }
     
     try {
-      // 直接比较日期字符串
-      const newStart = newOrder.pickupDate;
-      const newEnd = newOrder.returnDate;
-      const existingStart = order.pickupDate;
-      const existingEnd = order.returnDate;
+      const newStartDate = newOrder.pickupDate;
+      const newEndDate = newOrder.returnDate;
+      const newStartTime = newOrder.pickupTime;
+      const newEndTime = newOrder.returnTime;
       
-      // 检查日期范围是否重叠
-      return newStart <= existingEnd && newEnd >= existingStart;
+      const existingStartDate = order.pickupDate;
+      const existingEndDate = order.returnDate;
+      const existingStartTime = order.pickupTime;
+      const existingEndTime = order.returnTime;
+      
+      // 时间段优先级：morning=1, afternoon=2, evening=3
+      const timeOrder = { morning: 1, afternoon: 2, evening: 3 };
+      
+      // 如果日期范围完全不重叠，则无冲突
+      if (newEndDate < existingStartDate || newStartDate > existingEndDate) {
+        return false;
+      }
+      
+      // 如果日期范围有重叠，需要检查具体的时间段
+      
+      // 情况1：新订单结束日期早于现有订单开始日期
+      if (newEndDate < existingStartDate) {
+        return false;
+      }
+      
+      // 情况2：新订单开始日期晚于现有订单结束日期
+      if (newStartDate > existingEndDate) {
+        return false;
+      }
+      
+      // 情况3：新订单结束日期等于现有订单开始日期
+      if (newEndDate === existingStartDate) {
+        // 只有当新订单的结束时间段晚于或等于现有订单的开始时间段时才冲突
+        return timeOrder[newEndTime] >= timeOrder[existingStartTime];
+      }
+      
+      // 情况4：新订单开始日期等于现有订单结束日期
+      if (newStartDate === existingEndDate) {
+        // 只有当新订单的开始时间段早于或等于现有订单的结束时间段时才冲突
+        return timeOrder[newStartTime] <= timeOrder[existingEndTime];
+      }
+      
+      // 情况5：日期范围有真正的重叠（不只是边界相接）
+      return true;
     } catch (error) {
       return false;
     }
