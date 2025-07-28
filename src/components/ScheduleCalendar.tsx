@@ -341,6 +341,19 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
     setCurrentDate(new Date(year, month + direction, 1));
   };
 
+  const selectMonth = (monthIndex: number) => {
+    if (!isScrollingRef.current) {
+      saveScrollPosition();
+    }
+    setCurrentDate(new Date(year, monthIndex, 1));
+  };
+
+  const navigateYear = (direction: number) => {
+    if (!isScrollingRef.current) {
+      saveScrollPosition();
+    }
+    setCurrentDate(new Date(year + direction, month, 1));
+  };
   const handleZoom = (direction: 'in' | 'out') => {
     if (!isScrollingRef.current) {
       saveScrollPosition();
@@ -462,24 +475,40 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => navigateMonth(-1)}
+              onClick={() => navigateYear(-1)}
               className="p-2 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
-              title="上个月"
+              title="上一年"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <span className="font-semibold text-lg min-w-[120px] text-center">
-              {year}年{monthNames[month]}
+            <span className="font-semibold text-lg min-w-[80px] text-center">
+              {year}年
             </span>
             <button
-              onClick={() => navigateMonth(1)}
+              onClick={() => navigateYear(1)}
               className="p-2 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
-              title="下个月"
+              title="下一年"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
         </div>
+      </div>
+
+      <div className="grid grid-cols-6 gap-2 mb-4">
+        {monthNames.map((monthName, index) => (
+          <button
+            key={index}
+            onClick={() => selectMonth(index)}
+            className={`py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 focus:ring-2 focus:ring-blue-200 ${
+              month === index
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {monthName}
+          </button>
+        ))}
       </div>
 
       <div
