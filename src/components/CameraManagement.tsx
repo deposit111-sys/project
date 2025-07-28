@@ -65,6 +65,21 @@ export function CameraManagement({ cameras, onAddCamera, onDeleteCamera }: Camer
     return acc;
   }, {} as Record<string, Camera[]>);
 
+  // 对每个型号的相机按编号降序排列
+  Object.keys(groupedCameras).forEach(model => {
+    groupedCameras[model].sort((a, b) => {
+      // 尝试按数字排序，如果不是数字则按字符串排序
+      const aNum = parseInt(a.serialNumber, 10);
+      const bNum = parseInt(b.serialNumber, 10);
+      
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return bNum - aNum; // 数字降序
+      } else {
+        return b.serialNumber.localeCompare(a.serialNumber); // 字符串降序
+      }
+    });
+  });
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <h2 className="text-xl font-bold text-gray-800 mb-4">相机型号管理</h2>
