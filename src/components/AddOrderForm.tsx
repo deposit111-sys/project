@@ -232,6 +232,7 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
                 value={formData.pickupDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, pickupDate: e.target.value }))}
                 className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[180px] transition-colors duration-200 text-sm"
+               placeholder="选择取机日期"
                 required
               />
               <select
@@ -254,6 +255,7 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
                 value={formData.returnDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, returnDate: e.target.value }))}
                 className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[180px] transition-colors duration-200 text-sm"
+               placeholder="选择还机日期"
                 required
               />
               <select
