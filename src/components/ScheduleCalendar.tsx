@@ -507,7 +507,7 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
           >
           <thead>
             <tr>
-              <th className={`border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 font-semibold ${isFullscreen ? 'top-0 z-20' : 'top-0 z-20'}`}>型号/编号</th>
+              <th className={`border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 font-semibold ${isFullscreen ? 'top-0 z-20' : 'top-0 z-20'}`}>日期/编号</th>
               {daysInMonth.map(date => (
                 <th 
                   key={date.toISOString()} 
