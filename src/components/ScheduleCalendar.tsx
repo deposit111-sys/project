@@ -319,6 +319,14 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
     });
   };
 
+  const handleFullscreenToggle = () => {
+    if (isFullscreen) {
+      // 退出全屏时重置缩放比例
+      setZoomLevel(100);
+    }
+    setIsFullscreen(!isFullscreen);
+  };
+
   const handleModelChange = (model: string) => {
     if (!isScrollingRef.current) {
       saveScrollPosition();
@@ -385,7 +393,7 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
           </div>
           
           <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
+            onClick={handleFullscreenToggle}
             className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
             title={isFullscreen ? "退出全屏" : "全屏显示"}
           >
@@ -536,7 +544,7 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800">相机档期日历 - 全屏模式</h2>
             <button
-              onClick={() => setIsFullscreen(false)}
+              onClick={handleFullscreenToggle}
               className="p-2 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
               title="退出全屏"
             >
