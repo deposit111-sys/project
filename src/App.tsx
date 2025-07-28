@@ -17,6 +17,12 @@ function App() {
   const [showOrderModal, setShowOrderModal] = useLocalStorage<boolean>('showOrderModal', false);
   const [activeTab, setActiveTab] = useLocalStorage<string>('activeTab', 'calendar');
 
+  const handleSwitchToCalendar = (model: string, date: string) => {
+    // 切换到日历标签页
+    setActiveTab('calendar');
+    // 这里可以添加更多逻辑，比如设置日历的当前日期和筛选条件
+    // 由于当前日历组件没有暴露这些控制接口，我们先实现基本的切换功能
+  };
   const addCamera = (camera: Omit<CameraType, 'id'>) => {
     const newCamera = {
       ...camera,
@@ -189,6 +195,7 @@ function App() {
           cameras={cameras}
           onUpdateOrder={updateOrder}
           onDeleteOrder={deleteOrder}
+          onSwitchToCalendar={handleSwitchToCalendar}
         />
       </div>
     </div>

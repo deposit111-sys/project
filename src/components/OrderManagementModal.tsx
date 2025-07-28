@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { RentalOrder, Camera } from '../types';
 import { formatDateTime } from '../utils/dateUtils';
+import { checkScheduleConflict } from '../utils/dateUtils';
 import { Edit2, Trash2, X } from 'lucide-react';
 
 interface OrderManagementModalProps {
@@ -10,6 +11,7 @@ interface OrderManagementModalProps {
   cameras: Camera[];
   onUpdateOrder: (id: string, order: Partial<RentalOrder>) => void;
   onDeleteOrder: (id: string) => void;
+  onSwitchToCalendar?: (model: string, date: string) => void;
 }
 
 export function OrderManagementModal({ 
@@ -18,10 +20,16 @@ export function OrderManagementModal({
   orders, 
   cameras, 
   onUpdateOrder, 
-  onDeleteOrder 
+  onDeleteOrder,
+  onSwitchToCalendar
 }: OrderManagementModalProps) {
   const [editingOrder, setEditingOrder] = useState<RentalOrder | null>(null);
   const [formData, setFormData] = useState<Partial<RentalOrder>>({});
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [conflictInfo, setConflictInfo] = useState<{
+    conflictingOrder: RentalOrder | null;
+    availableAlternatives: Array<{ model: string; serialNumber: string }>;
+  }>({ conflictingOrder: null, availableAlternatives: [] });
 
   if (!isOpen) return null;
 
@@ -32,11 +40,73 @@ export function OrderManagementModal({
 
   const handleSave = () => {
     if (editingOrder) {
-      onUpdateOrder(editingOrder.id, formData);
-      setEditingOrder(null);
+      // 检查是否有冲突（排除当前编辑的订单）
+      const otherOrders = orders.filter(order => order.id !== editingOrder.id);
+      const hasConflict = checkScheduleConflict(
+        formData,
+        otherOrders,
+        formData.cameraModel || '',
+        formData.cameraSerialNumber || ''
+      );
+
+      if (hasConflict) {
+        // 找到冲突的订单
+        const conflictingOrder = otherOrders.find(order => 
+          order.cameraModel === formData.cameraModel &&
+          order.cameraSerialNumber === formData.cameraSerialNumber &&
+          checkScheduleConflict(formData, [order], formData.cameraModel || '', formData.cameraSerialNumber || '')
+        );
+
+        // 找到可用的替代相机
+        const availableAlternatives = cameras.filter(camera => {
+          if (camera.model !== formData.cameraModel) return false;
+          if (camera.serialNumber === formData.cameraSerialNumber) return false;
+          
+          const hasConflictWithAlternative = checkScheduleConflict(
+            formData,
+            otherOrders,
+            camera.model,
+            camera.serialNumber
+          );
+          
+          return !hasConflictWithAlternative;
+        });
+
+        setConflictInfo({
+          conflictingOrder: conflictingOrder || null,
+          availableAlternatives
+        });
+        setShowConflictModal(true);
+      } else {
+        // 没有冲突，直接保存
+        onUpdateOrder(editingOrder.id, formData);
+        setEditingOrder(null);
+        setShowConflictModal(false);
+      }
     }
   };
 
+  const handleUseAlternative = (camera: { model: string; serialNumber: string }) => {
+    if (editingOrder) {
+      const updatedFormData = {
+        ...formData,
+        cameraModel: camera.model,
+        cameraSerialNumber: camera.serialNumber
+      };
+      onUpdateOrder(editingOrder.id, updatedFormData);
+      setEditingOrder(null);
+      setShowConflictModal(false);
+    }
+  };
+
+  const handleSwitchToCalendar = (model: string) => {
+    if (onSwitchToCalendar && formData.pickupDate) {
+      onSwitchToCalendar(model, formData.pickupDate);
+      onClose();
+      setEditingOrder(null);
+      setShowConflictModal(false);
+    }
+  };
   const handleDelete = (id: string) => {
     if (window.confirm('确定要删除这个订单吗？')) {
       onDeleteOrder(id);
@@ -259,6 +329,67 @@ export function OrderManagementModal({
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 保存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 冲突处理模态框 */}
+      {showConflictModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-70 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-red-600">时间冲突</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="text-sm text-gray-700">
+                <p className="mb-2">您选择的时间段与以下订单冲突：</p>
+                {conflictInfo.conflictingOrder && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="font-medium">租借人: {conflictInfo.conflictingOrder.renterName}</div>
+                    <div className="text-sm text-gray-600">
+                      {formatDateTime(conflictInfo.conflictingOrder.pickupDate, conflictInfo.conflictingOrder.pickupTime)} - 
+                      {formatDateTime(conflictInfo.conflictingOrder.returnDate, conflictInfo.conflictingOrder.returnTime)}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {conflictInfo.availableAlternatives.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">可用的同型号相机：</p>
+                  <div className="space-y-2">
+                    {conflictInfo.availableAlternatives.map((camera, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleUseAlternative(camera)}
+                        className="w-full text-left p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors duration-200"
+                      >
+                        <div className="font-medium text-green-800">{camera.model}</div>
+                        <div className="text-sm text-green-600">编号: {camera.serialNumber}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <p className="text-sm text-gray-700 mb-2">或者查看其他型号的档期：</p>
+                <button
+                  onClick={() => handleSwitchToCalendar(formData.cameraModel || '')}
+                  className="w-full p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-200 text-blue-700 font-medium"
+                >
+                  在相机档期日历中查看 {formData.cameraModel} 的档期
+                </button>
+              </div>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowConflictModal(false)}
+                className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
+              >
+                取消
               </button>
             </div>
           </div>
