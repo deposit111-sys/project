@@ -447,8 +447,8 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
           fontSize: `${zoomLevel}%`,
           maxHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px',
           transform: `scale(${zoomLevel / 100})`,
-          width: `${100 / (zoomLevel / 100)}%`,
-          height: `${100 / (zoomLevel / 100)}%`,
+          transformOrigin: 'top left',
+          width: `${10000 / zoomLevel}%`,
           height: `${10000 / zoomLevel}%`
         }}
         onScroll={handleScroll}
