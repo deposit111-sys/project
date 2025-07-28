@@ -312,7 +312,7 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
     }
     setZoomLevel(prev => {
       if (direction === 'in') {
-        return Math.min(prev + 10, 100);
+        return Math.min(prev + 10, 150);
       } else {
         return Math.max(prev - 10, 10);
       }
@@ -406,7 +406,7 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
               <span className="text-sm font-medium min-w-[50px] text-center">{zoomLevel}%</span>
               <button
                 onClick={() => handleZoom('in')}
-                disabled={zoomLevel >= 100}
+                disabled={zoomLevel >= 150}
                 className="p-2 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="放大"
               >
@@ -448,7 +448,10 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
           maxHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px'
         }}
         onScroll={handleScroll}
-        onMouseMove={handleMouseMove}
+            transform: `scale(${zoomLevel / 100})`,
+            transformOrigin: 'top left',
+            width: `${10000 / zoomLevel}%`,
+            height: `${10000 / zoomLevel}%`,
       >
         <table 
           ref={calendarRef}
