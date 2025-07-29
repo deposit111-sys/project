@@ -1,19 +1,31 @@
 import React, { useState, useMemo } from 'react';
 import { RentalOrder } from '../types';
 import { formatDateTime } from '../utils/dateUtils';
-import { AlertTriangle, Package, PackageX, Calendar, User, Phone, DollarSign, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, Package, PackageX, Calendar, User, Phone, DollarSign, FileText, ChevronDown, ChevronUp, CheckCircle2, Circle } from 'lucide-react';
 
 interface PendingOrdersOverviewProps {
   orders: RentalOrder[];
   confirmedPickups: string[];
   confirmedReturns: string[];
+  onConfirmPickup: (orderId: string) => void;
+  onConfirmReturn: (orderId: string) => void;
 }
 
-export function PendingOrdersOverview({ orders, confirmedPickups, confirmedReturns }: PendingOrdersOverviewProps) {
+export function PendingOrdersOverview({ orders, confirmedPickups, confirmedReturns, onConfirmPickup, onConfirmReturn }: PendingOrdersOverviewProps) {
   const [showPendingPickups, setShowPendingPickups] = useState(true);
   const [showPendingReturns, setShowPendingReturns] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'camera' | 'renter'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    orderId: string;
+    type: 'pickup' | 'return';
+    orderInfo: {
+      cameraModel: string;
+      cameraSerialNumber: string;
+      renterName: string;
+    };
+  } | null>(null);
 
   // 获取当前日期
   const today = new Date().toISOString().split('T')[0];
@@ -83,9 +95,42 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
     return diffDays;
   };
 
+  const handleCheckboxClick = (order: RentalOrder, type: 'pickup' | 'return') => {
+    setConfirmAction({
+      orderId: order.id,
+      type,
+      orderInfo: {
+        cameraModel: order.cameraModel,
+        cameraSerialNumber: order.cameraSerialNumber,
+        renterName: order.renterName
+      }
+    });
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirm = () => {
+    if (confirmAction) {
+      if (confirmAction.type === 'pickup') {
+        onConfirmPickup(confirmAction.orderId);
+      } else {
+        onConfirmReturn(confirmAction.orderId);
+      }
+    }
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+  };
+
+  const handleCancel = () => {
+    setShowConfirmModal(false);
+    setConfirmAction(null);
+  };
+
   const OrderCard = ({ order, type }: { order: RentalOrder; type: 'pickup' | 'return' }) => {
     const isOverdue = type === 'return' && order.returnDate < today;
     const overdueDays = isOverdue ? getOverdueDays(order.returnDate) : 0;
+    const isConfirmed = type === 'pickup' 
+      ? confirmedPickups.includes(order.id)
+      : confirmedReturns.includes(order.id);
 
     return (
       <div className={`p-4 rounded-lg border-l-4 ${
@@ -117,11 +162,44 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
             </div>
           </div>
           {isOverdue && (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleCheckboxClick(order, type)}
+                className="flex items-center text-green-600 hover:text-green-700 focus:ring-2 focus:ring-green-200 rounded transition-all duration-200 p-1"
+                title={type === 'pickup' ? '确认取机' : '确认还机'}
+              >
+                {isConfirmed ? (
+                  <CheckCircle2 className="h-5 w-5 fill-current" />
+                ) : (
+                  <Circle className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          )}
+          {isOverdue && (
             <div className="flex items-center bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
               <AlertTriangle className="h-3 w-3 mr-1" />
               逾期 {overdueDays} 天
             </div>
           )}
+        </div>
+
+        <div className="flex justify-between items-center mt-3">
+          <div></div>
+          <button
+            onClick={() => handleCheckboxClick(order, type)}
+            className="flex items-center text-green-600 hover:text-green-700 focus:ring-2 focus:ring-green-200 rounded transition-all duration-200 p-1"
+            title={type === 'pickup' ? '确认取机' : '确认还机'}
+          >
+            {isConfirmed ? (
+              <CheckCircle2 className="h-5 w-5 mr-1 fill-current" />
+            ) : (
+              <Circle className="h-5 w-5 mr-1" />
+            )}
+            <span className="text-sm font-medium">
+              {type === 'pickup' ? '确认取机' : '确认还机'}
+            </span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
