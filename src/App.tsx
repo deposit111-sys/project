@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, Clock, Download, Calendar, Search, CalendarDays } from 'lucide-react';
+import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Camera as CameraType, RentalOrder } from './types';
 import { StatCard } from './components/StatCard';
