@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RentalOrder } from '../types';
 import { formatDate } from '../utils/dateUtils';
-import { Calendar, CheckCircle2, Circle } from 'lucide-react';
+import { Calendar, CheckCircle2, Circle, AlertCircle, Package, PackageX } from 'lucide-react';
 import { DatePicker } from './DatePicker';
 
 interface PickupReturnScheduleProps {
@@ -14,6 +14,8 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [confirmedPickups, setConfirmedPickups] = useState<Set<string>>(new Set());
   const [confirmedReturns, setConfirmedReturns] = useState<Set<string>>(new Set());
+  const [showPendingPickups, setShowPendingPickups] = useState(false);
+  const [showPendingReturns, setShowPendingReturns] = useState(false);
 
   const getOrdersForDate = (date: string, type: 'pickup' | 'return') => {
     return orders.filter(order => {
@@ -24,6 +26,10 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
 
   const pickupOrders = getOrdersForDate(selectedDate, 'pickup');
   const returnOrders = getOrdersForDate(selectedDate, 'return');
+
+  // 计算未取和未还的订单
+  const pendingPickupOrders = pickupOrders.filter(order => !confirmedPickups.has(order.id));
+  const pendingReturnOrders = returnOrders.filter(order => !confirmedReturns.has(order.id));
 
   const timeMap = {
     morning: '上午',
@@ -66,6 +72,99 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
           className="min-w-[180px]"
         />
       </div>
+
+      {/* 未取未还统计卡片 */}
+      {(pendingPickupOrders.length > 0 || pendingReturnOrders.length > 0) && (
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 未取订单统计 */}
+          {pendingPickupOrders.length > 0 && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <Package className="h-5 w-5 text-orange-600 mr-2" />
+                  <h3 className="font-semibold text-orange-800">未取相机</h3>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="px-2 py-1 bg-orange-200 text-orange-800 rounded-full text-sm font-medium">
+                    {pendingPickupOrders.length}台
+                  </span>
+                  <button
+                    onClick={() => setShowPendingPickups(!showPendingPickups)}
+                    className="text-orange-600 hover:text-orange-700 text-sm font-medium"
+                  >
+                    {showPendingPickups ? '收起' : '详情'}
+                  </button>
+                </div>
+              </div>
+              {showPendingPickups && (
+                <div className="space-y-2">
+                  {pendingPickupOrders.map(order => (
+                    <div key={order.id} className="bg-white p-3 rounded border border-orange-100">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800">{order.cameraModel} - {order.cameraSerialNumber}</div>
+                          <div className="text-sm text-orange-600 font-medium">{timeMap[order.pickupTime]}</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            <div>租借人: {order.renterName}</div>
+                            <div>销售: {order.salesperson}</div>
+                            {order.customerService && <div>客服: {order.customerService}</div>}
+                            {order.depositStatus && <div>定金: {order.depositStatus}</div>}
+                          </div>
+                        </div>
+                        <AlertCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-1" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 未还订单统计 */}
+          {pendingReturnOrders.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <PackageX className="h-5 w-5 text-red-600 mr-2" />
+                  <h3 className="font-semibold text-red-800">未还相机</h3>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="px-2 py-1 bg-red-200 text-red-800 rounded-full text-sm font-medium">
+                    {pendingReturnOrders.length}台
+                  </span>
+                  <button
+                    onClick={() => setShowPendingReturns(!showPendingReturns)}
+                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                  >
+                    {showPendingReturns ? '收起' : '详情'}
+                  </button>
+                </div>
+              </div>
+              {showPendingReturns && (
+                <div className="space-y-2">
+                  {pendingReturnOrders.map(order => (
+                    <div key={order.id} className="bg-white p-3 rounded border border-red-100">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800">{order.cameraModel} - {order.cameraSerialNumber}</div>
+                          <div className="text-sm text-red-600 font-medium">{timeMap[order.returnTime]}</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            <div>租借人: {order.renterName}</div>
+                            <div>销售: {order.salesperson}</div>
+                            {order.customerService && <div>客服: {order.customerService}</div>}
+                            {order.depositStatus && <div>定金: {order.depositStatus}</div>}
+                          </div>
+                        </div>
+                        <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-1" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
@@ -163,7 +262,7 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
 
       <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
         <h3 className="text-lg font-semibold text-gray-800 mb-3">当日统计</h3>
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
           <div className="p-3 bg-white rounded-lg">
             <div className="text-2xl font-bold text-blue-600">{pickupOrders.length}</div>
             <div className="text-sm text-gray-600">取机数量</div>
@@ -175,6 +274,14 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
           <div className="p-3 bg-white rounded-lg">
             <div className="text-2xl font-bold text-gray-800">{pickupOrders.length + returnOrders.length}</div>
             <div className="text-sm text-gray-600">总安排</div>
+          </div>
+          <div className="p-3 bg-white rounded-lg">
+            <div className="text-2xl font-bold text-orange-600">{pendingPickupOrders.length}</div>
+            <div className="text-sm text-gray-600">未取数量</div>
+          </div>
+          <div className="p-3 bg-white rounded-lg">
+            <div className="text-2xl font-bold text-red-600">{pendingReturnOrders.length}</div>
+            <div className="text-sm text-gray-600">未还数量</div>
           </div>
         </div>
       </div>
