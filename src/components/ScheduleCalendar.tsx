@@ -151,9 +151,9 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
         const bNum = parseInt(b.serialNumber, 10);
         
         if (!isNaN(aNum) && !isNaN(bNum)) {
-          return bNum - aNum; // 数字降序
+          return aNum - bNum; // 数字升序
         } else {
-          return b.serialNumber.localeCompare(a.serialNumber); // 字符串降序
+          return a.serialNumber.localeCompare(b.serialNumber); // 字符串升序
         }
       });
     });
