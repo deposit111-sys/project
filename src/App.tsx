@@ -9,6 +9,7 @@ import { CameraManagement } from './components/CameraManagement';
 import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { ScheduleSearch } from './components/ScheduleSearch';
 import { PickupReturnSchedule } from './components/PickupReturnSchedule';
+import { PendingOrdersOverview } from './components/PendingOrdersOverview';
 import { DataManagement } from './components/DataManagement';
 import { exportToExcel } from './utils/exportUtils';
 
@@ -74,7 +75,8 @@ function App() {
   const tabs = [
     { id: 'calendar', label: '相机档期日历', icon: Calendar },
     { id: 'search', label: '档期检索', icon: Search },
-    { id: 'schedule', label: '取还相机目录', icon: CalendarDays }
+    { id: 'schedule', label: '取还相机目录', icon: CalendarDays },
+    { id: 'pending', label: '未还未取统计目录', icon: AlertCircle }
   ];
 
   return (
@@ -192,6 +194,11 @@ function App() {
                     onConfirmReturn={(orderId) => {
                       console.log('确认还机:', orderId);
                     }}
+                  />
+                )}
+                {activeTab === 'pending' && (
+                  <PendingOrdersOverview
+                    orders={orders}
                   />
                 )}
               </div>
