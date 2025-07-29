@@ -27,6 +27,7 @@ export function OrderManagementModal({
   const [editingOrder, setEditingOrder] = useState<RentalOrder | null>(null);
   const [formData, setFormData] = useState<Partial<RentalOrder>>({});
   const [showConflictModal, setShowConflictModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [conflictInfo, setConflictInfo] = useState<{
     conflictingOrder: RentalOrder | null;
     availableAlternatives: Array<{ model: string; serialNumber: string }>;
@@ -83,6 +84,9 @@ export function OrderManagementModal({
         onUpdateOrder(editingOrder.id, formData);
         setEditingOrder(null);
         setShowConflictModal(false);
+        setShowSuccessModal(true);
+        // 3秒后自动关闭成功提示
+        setTimeout(() => setShowSuccessModal(false), 3000);
       }
     }
   };
@@ -97,6 +101,9 @@ export function OrderManagementModal({
       onUpdateOrder(editingOrder.id, updatedFormData);
       setEditingOrder(null);
       setShowConflictModal(false);
+      setShowSuccessModal(true);
+      // 3秒后自动关闭成功提示
+      setTimeout(() => setShowSuccessModal(false), 3000);
     }
   };
 
@@ -391,6 +398,29 @@ export function OrderManagementModal({
                 className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
               >
                 取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 保存成功提示模态框 */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-70 p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full">
+            <div className="p-6 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">保存成功</h3>
+              <p className="text-sm text-gray-600 mb-4">订单信息已成功更新</p>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 font-medium"
+              >
+                确定
               </button>
             </div>
           </div>
