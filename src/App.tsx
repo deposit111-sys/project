@@ -94,7 +94,7 @@ function App() {
   };
 
   const handleExportExcel = () => {
-    exportToExcel(orders);
+    exportToExcel(orders, confirmedPickups, confirmedReturns);
   };
 
   const tabs = [

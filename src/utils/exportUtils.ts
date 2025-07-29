@@ -1,6 +1,10 @@
 import { RentalOrder } from '../types';
 
-export function exportToExcel(orders: RentalOrder[]): void {
+export function exportToExcel(
+  orders: RentalOrder[], 
+  confirmedPickups: string[] = [], 
+  confirmedReturns: string[] = []
+): void {
   const headers = [
     '订单ID',
     '相机型号',
@@ -10,6 +14,8 @@ export function exportToExcel(orders: RentalOrder[]): void {
     '销售人员',
     '取机时间',
     '还机时间',
+    '取机状态',
+    '还机状态',
     '定金状态',
     '备注',
     '创建时间'
@@ -21,6 +27,33 @@ export function exportToExcel(orders: RentalOrder[]): void {
     evening: '晚上'
   };
 
+  // 获取当前日期用于判断状态
+  const today = new Date().toISOString().split('T')[0];
+
+  // 获取取机状态
+  const getPickupStatus = (order: RentalOrder): string => {
+    if (confirmedPickups.includes(order.id)) {
+      return '已取机';
+    }
+    if (order.pickupDate <= today) {
+      return '未取机';
+    }
+    return '待取机';
+  };
+
+  // 获取还机状态
+  const getReturnStatus = (order: RentalOrder): string => {
+    if (confirmedReturns.includes(order.id)) {
+      return '已还机';
+    }
+    if (order.returnDate < today) {
+      return '逾期未还';
+    }
+    if (order.returnDate === today) {
+      return '今日应还';
+    }
+    return '租赁中';
+  };
   const csvContent = [
     headers.join(','),
     ...orders.map(order => [
@@ -32,6 +65,8 @@ export function exportToExcel(orders: RentalOrder[]): void {
       order.salesperson,
       `${order.pickupDate} ${timeMap[order.pickupTime]}`,
       `${order.returnDate} ${timeMap[order.returnTime]}`,
+      getPickupStatus(order),
+      getReturnStatus(order),
       order.depositStatus,
       order.notes,
       new Date(order.createdAt).toLocaleString('zh-CN', {
