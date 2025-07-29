@@ -13,6 +13,7 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [availableCameras, setAvailableCameras] = useState<Camera[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const searchAvailableCameras = () => {
     if (!startDate || !endDate) return;
@@ -29,6 +30,18 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
     });
 
     setAvailableCameras(available);
+    setHasSearched(true);
+  };
+
+  const handleDateChange = (type: 'start' | 'end', date: string) => {
+    if (type === 'start') {
+      setStartDate(date);
+    } else {
+      setEndDate(date);
+    }
+    // 重置搜索状态，清空之前的结果
+    setHasSearched(false);
+    setAvailableCameras([]);
   };
 
   return (
@@ -42,7 +55,7 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
             </label>
             <DatePicker
               value={startDate}
-              onChange={(date) => setStartDate(date)}
+              onChange={(date) => handleDateChange('start', date)}
               placeholder="选择开始日期"
               className="min-w-[150px]"
             />
@@ -54,7 +67,7 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
             </label>
             <DatePicker
               value={endDate}
-              onChange={(date) => setEndDate(date)}
+              onChange={(date) => handleDateChange('end', date)}
               placeholder="选择结束日期"
               className="min-w-[150px]"
             />
@@ -69,6 +82,16 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
             </button>
           </div>
         </div>
+
+        {/* 搜索提示 */}
+        {startDate && endDate && !hasSearched && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center text-blue-700">
+              <Search className="h-4 w-4 mr-2" />
+              <span className="text-sm">已选择时间段：{startDate} 至 {endDate}，点击"搜索"按钮查看可用相机</span>
+            </div>
+          </div>
+        )}
 
         {availableCameras.length > 0 && (
           <div className="mt-6">
@@ -89,7 +112,7 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
           </div>
         )}
         
-        {startDate && endDate && availableCameras.length === 0 && (
+        {hasSearched && startDate && endDate && availableCameras.length === 0 && (
           <div className="mt-6 text-center py-8">
             <div className="text-gray-500">该时间段内暂无可用相机</div>
           </div>
