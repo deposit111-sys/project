@@ -163,20 +163,6 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
           </div>
           {isOverdue && (
             <div className="flex items-center space-x-2">
-              <button
-                onClick={() => handleCheckboxClick(order, type)}
-                className="flex items-center text-green-600 hover:text-green-700 focus:ring-2 focus:ring-green-200 rounded transition-all duration-200 p-1"
-                title={type === 'pickup' ? '确认取机' : '确认还机'}
-              >
-                {isConfirmed ? (
-                  <CheckCircle2 className="h-5 w-5 fill-current" />
-                ) : (
-                  <Circle className="h-5 w-5" />
-                )}
-              </button>
-            </div>
-          )}
-          {isOverdue && (
             <div className="flex items-center bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
               <AlertTriangle className="h-3 w-3 mr-1" />
               逾期 {overdueDays} 天
@@ -201,6 +187,7 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
             </span>
           </button>
         </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div className="space-y-2">
