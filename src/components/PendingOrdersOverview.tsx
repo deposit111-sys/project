@@ -167,8 +167,26 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
               <AlertTriangle className="h-3 w-3 mr-1" />
               逾期 {overdueDays} 天
             </div>
-          </div>
+            </div>
           )}
+        </div>
+
+        <div className="flex justify-between items-center mt-3">
+          <div></div>
+          <button
+            onClick={() => handleCheckboxClick(order, type)}
+            className="flex items-center text-green-600 hover:text-green-700 focus:ring-2 focus:ring-green-200 rounded transition-all duration-200 p-1"
+            title={type === 'pickup' ? '确认取机' : '确认还机'}
+          >
+            {isConfirmed ? (
+              <CheckCircle2 className="h-5 w-5 mr-1 fill-current" />
+            ) : (
+              <Circle className="h-5 w-5 mr-1" />
+            )}
+            <span className="text-sm font-medium">
+              {type === 'pickup' ? '确认取机' : '确认还机'}
+            </span>
+          </button>
         </div>
 
 
