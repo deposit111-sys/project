@@ -6,14 +6,20 @@ import { DatePicker } from './DatePicker';
 
 interface PickupReturnScheduleProps {
   orders: RentalOrder[];
+  confirmedPickups: string[];
+  confirmedReturns: string[];
   onConfirmPickup: (orderId: string) => void;
   onConfirmReturn: (orderId: string) => void;
 }
 
-export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn }: PickupReturnScheduleProps) {
+export function PickupReturnSchedule({ 
+  orders, 
+  confirmedPickups, 
+  confirmedReturns, 
+  onConfirmPickup, 
+  onConfirmReturn 
+}: PickupReturnScheduleProps) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [confirmedPickups, setConfirmedPickups] = useState<Set<string>>(new Set());
-  const [confirmedReturns, setConfirmedReturns] = useState<Set<string>>(new Set());
   const [showPendingPickups, setShowPendingPickups] = useState(false);
   const [showPendingReturns, setShowPendingReturns] = useState(false);
 
@@ -28,8 +34,8 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
   const returnOrders = getOrdersForDate(selectedDate, 'return');
 
   // 计算未取和未还的订单
-  const pendingPickupOrders = pickupOrders.filter(order => !confirmedPickups.has(order.id));
-  const pendingReturnOrders = returnOrders.filter(order => !confirmedReturns.has(order.id));
+  const pendingPickupOrders = pickupOrders.filter(order => !confirmedPickups.includes(order.id));
+  const pendingReturnOrders = returnOrders.filter(order => !confirmedReturns.includes(order.id));
 
   const timeMap = {
     morning: '上午',
@@ -38,24 +44,10 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
   };
 
   const handlePickupConfirm = (orderId: string) => {
-    const newConfirmed = new Set(confirmedPickups);
-    if (newConfirmed.has(orderId)) {
-      newConfirmed.delete(orderId);
-    } else {
-      newConfirmed.add(orderId);
-    }
-    setConfirmedPickups(newConfirmed);
     onConfirmPickup(orderId);
   };
 
   const handleReturnConfirm = (orderId: string) => {
-    const newConfirmed = new Set(confirmedReturns);
-    if (newConfirmed.has(orderId)) {
-      newConfirmed.delete(orderId);
-    } else {
-      newConfirmed.add(orderId);
-    }
-    setConfirmedReturns(newConfirmed);
     onConfirmReturn(orderId);
   };
   return (
@@ -186,7 +178,7 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
                     onClick={() => handlePickupConfirm(order.id)}
                     className="flex items-center text-green-600 hover:text-green-700 focus:ring-2 focus:ring-green-200 rounded transition-all duration-200 p-1"
                   >
-                    {confirmedPickups.has(order.id) ? (
+                    {confirmedPickups.includes(order.id) ? (
                       <CheckCircle2 className="h-5 w-5 mr-1 fill-current" />
                     ) : (
                       <Circle className="h-5 w-5 mr-1" />
@@ -232,7 +224,7 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
                     onClick={() => handleReturnConfirm(order.id)}
                     className="flex items-center text-blue-600 hover:text-blue-700 focus:ring-2 focus:ring-blue-200 rounded transition-all duration-200 p-1"
                   >
-                    {confirmedReturns.has(order.id) ? (
+                    {confirmedReturns.includes(order.id) ? (
                       <CheckCircle2 className="h-5 w-5 mr-1 fill-current" />
                     ) : (
                       <Circle className="h-5 w-5 mr-1" />

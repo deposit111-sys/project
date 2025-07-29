@@ -5,9 +5,11 @@ import { AlertTriangle, Package, PackageX, Calendar, User, Phone, DollarSign, Fi
 
 interface PendingOrdersOverviewProps {
   orders: RentalOrder[];
+  confirmedPickups: string[];
+  confirmedReturns: string[];
 }
 
-export function PendingOrdersOverview({ orders }: PendingOrdersOverviewProps) {
+export function PendingOrdersOverview({ orders, confirmedPickups, confirmedReturns }: PendingOrdersOverviewProps) {
   const [showPendingPickups, setShowPendingPickups] = useState(true);
   const [showPendingReturns, setShowPendingReturns] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'camera' | 'renter'>('date');
@@ -18,8 +20,18 @@ export function PendingOrdersOverview({ orders }: PendingOrdersOverviewProps) {
 
   // 计算未取和未还的订单
   const pendingOrders = useMemo(() => {
-    const pendingPickups = orders.filter(order => order.pickupDate <= today && order.returnDate >= today);
-    const pendingReturns = orders.filter(order => order.returnDate < today);
+    // 未取订单：应该取机但还未确认取机的订单
+    const pendingPickups = orders.filter(order => 
+      order.pickupDate <= today && 
+      order.returnDate >= today && 
+      !confirmedPickups.includes(order.id)
+    );
+    
+    // 未还订单：应该还机但还未确认还机的订单
+    const pendingReturns = orders.filter(order => 
+      order.returnDate < today && 
+      !confirmedReturns.includes(order.id)
+    );
 
     // 排序函数
     const sortOrders = (ordersList: RentalOrder[]) => {
@@ -47,7 +59,7 @@ export function PendingOrdersOverview({ orders }: PendingOrdersOverviewProps) {
       pendingPickups: sortOrders(pendingPickups),
       pendingReturns: sortOrders(pendingReturns)
     };
-  }, [orders, today, sortBy, sortOrder]);
+  }, [orders, today, sortBy, sortOrder, confirmedPickups, confirmedReturns]);
 
   const handleSort = (newSortBy: 'date' | 'camera' | 'renter') => {
     if (sortBy === newSortBy) {

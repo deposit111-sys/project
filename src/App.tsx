@@ -18,6 +18,8 @@ function App() {
   const [orders, setOrders] = useLocalStorage<RentalOrder[]>('orders', []);
   const [showOrderModal, setShowOrderModal] = useLocalStorage<boolean>('showOrderModal', false);
   const [activeTab, setActiveTab] = useLocalStorage<string>('activeTab', 'calendar');
+  const [confirmedPickups, setConfirmedPickups] = useLocalStorage<string[]>('confirmedPickups', []);
+  const [confirmedReturns, setConfirmedReturns] = useLocalStorage<string[]>('confirmedReturns', []);
 
   const handleSwitchToCalendar = (model: string, date: string) => {
     // 切换到日历标签页
@@ -67,7 +69,30 @@ function App() {
   const handleImportData = (importedCameras: CameraType[], importedOrders: RentalOrder[]) => {
     setCameras(importedCameras);
     setOrders(importedOrders);
+    // 清空确认状态，因为导入了新数据
+    setConfirmedPickups([]);
+    setConfirmedReturns([]);
   };
+  const handleConfirmPickup = (orderId: string) => {
+    setConfirmedPickups(prev => {
+      if (prev.includes(orderId)) {
+        return prev.filter(id => id !== orderId);
+      } else {
+        return [...prev, orderId];
+      }
+    });
+  };
+
+  const handleConfirmReturn = (orderId: string) => {
+    setConfirmedReturns(prev => {
+      if (prev.includes(orderId)) {
+        return prev.filter(id => id !== orderId);
+      } else {
+        return [...prev, orderId];
+      }
+    });
+  };
+
   const handleExportExcel = () => {
     exportToExcel(orders);
   };
@@ -188,17 +213,17 @@ function App() {
                 {activeTab === 'schedule' && (
                   <PickupReturnSchedule
                     orders={orders}
-                    onConfirmPickup={(orderId) => {
-                      console.log('确认取机:', orderId);
-                    }}
-                    onConfirmReturn={(orderId) => {
-                      console.log('确认还机:', orderId);
-                    }}
+                    confirmedPickups={confirmedPickups}
+                    confirmedReturns={confirmedReturns}
+                    onConfirmPickup={handleConfirmPickup}
+                    onConfirmReturn={handleConfirmReturn}
                   />
                 )}
                 {activeTab === 'pending' && (
                   <PendingOrdersOverview
                     orders={orders}
+                    confirmedPickups={confirmedPickups}
+                    confirmedReturns={confirmedReturns}
                   />
                 )}
               </div>
