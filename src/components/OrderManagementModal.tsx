@@ -271,7 +271,7 @@ export function OrderManagementModal({
                   <div className="flex space-x-2">
                     <DatePicker
                       value={formData.pickupDate || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, pickupDate: e.target.value }))}
+                      onChange={(date) => setFormData(prev => ({ ...prev, pickupDate: date }))}
                       placeholder="选择取机日期"
                       className="flex-1"
                     />
@@ -291,7 +291,7 @@ export function OrderManagementModal({
                   <div className="flex space-x-2">
                     <DatePicker
                       value={formData.returnDate || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, returnDate: e.target.value }))}
+                      onChange={(date) => setFormData(prev => ({ ...prev, returnDate: date }))}
                       placeholder="选择还机日期"
                       className="flex-1"
                     />

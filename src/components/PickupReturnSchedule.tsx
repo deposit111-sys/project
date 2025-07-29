@@ -61,7 +61,7 @@ export function PickupReturnSchedule({ orders, onConfirmPickup, onConfirmReturn 
         </label>
         <DatePicker
           value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
+          onChange={(date) => setSelectedDate(date)}
           placeholder="选择查看日期"
           className="min-w-[180px]"
         />

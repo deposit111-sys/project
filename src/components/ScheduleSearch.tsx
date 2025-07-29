@@ -42,7 +42,7 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
             </label>
             <DatePicker
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(date) => setStartDate(date)}
               placeholder="选择开始日期"
               className="min-w-[150px]"
             />
@@ -54,7 +54,7 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
             </label>
             <DatePicker
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(date) => setEndDate(date)}
               placeholder="选择结束日期"
               className="min-w-[150px]"
             />
