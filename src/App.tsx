@@ -224,6 +224,8 @@ function App() {
                     orders={orders}
                     confirmedPickups={confirmedPickups}
                     confirmedReturns={confirmedReturns}
+                    onConfirmPickup={handleConfirmPickup}
+                    onConfirmReturn={handleConfirmReturn}
                   />
                 )}
               </div>

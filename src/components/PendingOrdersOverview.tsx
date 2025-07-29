@@ -398,6 +398,56 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
           </div>
         </div>
       )}
+
+      {/* 确认弹窗 */}
+      {showConfirmModal && confirmAction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-xl font-bold text-gray-800">
+                {confirmAction.type === 'pickup' ? '确认取机' : '确认还机'}
+              </h3>
+            </div>
+            <div className="p-6">
+              <div className="mb-4">
+                <p className="text-gray-700 mb-2">
+                  您确定要{confirmAction.type === 'pickup' ? '确认取机' : '确认还机'}吗？
+                </p>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="text-sm space-y-1">
+                    <div><span className="font-medium">相机:</span> {confirmAction.orderInfo.cameraModel} - {confirmAction.orderInfo.cameraSerialNumber}</div>
+                    <div><span className="font-medium">租借人:</span> {confirmAction.orderInfo.renterName}</div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600">
+                {confirmAction.type === 'pickup' 
+                  ? '确认后，该订单将标记为已取机状态。'
+                  : '确认后，该订单将标记为已还机状态。'
+                }
+              </p>
+            </div>
+            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={handleCancel}
+                className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirm}
+                className={`px-6 py-2 text-white rounded-lg focus:ring-4 transition-all duration-200 shadow-sm hover:shadow-md ${
+                  confirmAction.type === 'pickup'
+                    ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-200'
+                    : 'bg-green-600 hover:bg-green-700 focus:ring-green-200'
+                }`}
+              >
+                确认{confirmAction.type === 'pickup' ? '取机' : '还机'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
