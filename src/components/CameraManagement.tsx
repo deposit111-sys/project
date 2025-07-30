@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Camera } from '../types';
-import { Plus, ChevronDown, ChevronUp, Trash2, Camera } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Trash2, Camera as CameraIcon } from 'lucide-react';
 
 interface CameraManagementProps {
   cameras: Camera[];
