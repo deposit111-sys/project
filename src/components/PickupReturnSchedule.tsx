@@ -22,8 +22,6 @@ export function PickupReturnSchedule({
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showPendingPickups, setShowPendingPickups] = useState(false);
   const [showPendingReturns, setShowPendingReturns] = useState(false);
-  const [showEarlyPickupModal, setShowEarlyPickupModal] = useState(false);
-  const [selectedOrderForEarlyPickup, setSelectedOrderForEarlyPickup] = useState<RentalOrder | null>(null);
 
   // 获取当前日期
   const today = new Date().toISOString().split('T')[0];
@@ -34,16 +32,8 @@ export function PickupReturnSchedule({
     });
   };
 
-  // 获取可以提前取机的订单（未来的取机订单）
-  const getFuturePickupOrders = () => {
-    return orders.filter(order => 
-      order.pickupDate > selectedDate && 
-      !confirmedPickups.includes(order.id)
-    );
-  };
   const pickupOrders = getOrdersForDate(selectedDate, 'pickup');
   const returnOrders = getOrdersForDate(selectedDate, 'return');
-  const futurePickupOrders = getFuturePickupOrders();
 
   // 计算未取和未还的订单
   const pendingPickupOrders = pickupOrders.filter(order => !confirmedPickups.includes(order.id));
@@ -63,24 +53,6 @@ export function PickupReturnSchedule({
     onConfirmReturn(orderId);
   };
 
-  const handleEarlyPickupClick = (order: RentalOrder) => {
-    setSelectedOrderForEarlyPickup(order);
-    setShowEarlyPickupModal(true);
-  };
-
-  const handleConfirmEarlyPickup = () => {
-    if (selectedOrderForEarlyPickup) {
-      onConfirmPickup(selectedOrderForEarlyPickup.id);
-      setShowEarlyPickupModal(false);
-      setSelectedOrderForEarlyPickup(null);
-    }
-  };
-
-  const handleCancelEarlyPickup = () => {
-    setShowEarlyPickupModal(false);
-    setSelectedOrderForEarlyPickup(null);
-  };
-
   return (
     <div>
       <div className="mb-6">
@@ -96,43 +68,6 @@ export function PickupReturnSchedule({
         />
       </div>
 
-      {/* 提前取机功能 */}
-      {futurePickupOrders.length > 0 && (
-        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center">
-              <Package className="h-5 w-5 text-blue-600 mr-2" />
-              <h3 className="font-semibold text-blue-800">可提前取机</h3>
-            </div>
-            <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-sm font-medium">
-              {futurePickupOrders.length}个订单
-            </span>
-          </div>
-          <div className="space-y-2 max-h-32 overflow-y-auto">
-            {futurePickupOrders.slice(0, 3).map(order => (
-              <div key={order.id} className="bg-white p-3 rounded border border-blue-100 flex justify-between items-center">
-                <div className="flex-1">
-                  <div className="font-medium text-gray-800">{order.cameraModel} - {order.cameraSerialNumber}</div>
-                  <div className="text-sm text-blue-600">
-                    原定取机: {order.pickupDate} {timeMap[order.pickupTime]} | 租借人: {order.renterName}
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleEarlyPickupClick(order)}
-                  className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                >
-                  提前取机
-                </button>
-              </div>
-            ))}
-            {futurePickupOrders.length > 3 && (
-              <div className="text-center text-sm text-blue-600">
-                还有 {futurePickupOrders.length - 3} 个订单可提前取机...
-              </div>
-            )}
-          </div>
-        </div>
-      )}
       {/* 未取未还统计卡片 */}
       {(pendingPickupOrders.length > 0 || pendingReturnOrders.length > 0) && (
         <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -320,46 +255,6 @@ export function PickupReturnSchedule({
         </div>
       </div>
 
-      {/* 提前取机确认弹窗 */}
-      {showEarlyPickupModal && selectedOrderForEarlyPickup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-blue-600">确认提前取机</h3>
-            </div>
-            <div className="p-6">
-              <div className="mb-4">
-                <p className="text-gray-700 mb-2">您确定要为以下订单确认提前取机吗？</p>
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="text-sm space-y-1">
-                    <div><span className="font-medium">相机:</span> {selectedOrderForEarlyPickup.cameraModel} - {selectedOrderForEarlyPickup.cameraSerialNumber}</div>
-                    <div><span className="font-medium">租借人:</span> {selectedOrderForEarlyPickup.renterName}</div>
-                    <div><span className="font-medium">原定取机时间:</span> {selectedOrderForEarlyPickup.pickupDate} {timeMap[selectedOrderForEarlyPickup.pickupTime]}</div>
-                    <div><span className="font-medium">提前取机日期:</span> {selectedDate}</div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-gray-600">
-                确认后，该订单将标记为已取机状态，客户可以提前开始使用相机。
-              </p>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-              <button
-                onClick={handleCancelEarlyPickup}
-                className="px-6 py-2 text-gray-600 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
-              >
-                取消
-              </button>
-              <button
-                onClick={handleConfirmEarlyPickup}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-sm hover:shadow-md"
-              >
-                确认提前取机
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
         <h3 className="text-lg font-semibold text-gray-800 mb-3">当日统计</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
