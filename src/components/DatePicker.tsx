@@ -126,37 +126,37 @@ export function DatePicker({ value, onChange, placeholder = "选择日期", clas
     <div ref={containerRef} className={`relative ${className}`}>
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 cursor-pointer bg-white/80 backdrop-blur-sm flex items-center justify-between shadow-sm hover:shadow-md ${
-          isOpen ? 'ring-2 ring-blue-500 border-blue-500 shadow-md' : ''
+        className={`w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 cursor-pointer bg-white flex items-center justify-between ${
+          isOpen ? 'ring-2 ring-blue-500 border-blue-500' : ''
         }`}
       >
         <span className={value ? 'text-gray-900' : 'text-gray-500'}>
           {value ? formatDisplayDate(value) : placeholder}
         </span>
-        <Calendar className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+        <Calendar className="h-4 w-4 text-gray-400" />
       </div>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 bg-white/95 backdrop-blur-sm border border-gray-300 rounded-xl shadow-2xl z-50 p-6 min-w-[320px] animate-in slide-in-from-top-2 duration-300">
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-4 min-w-[300px]">
           {/* 年份和月份导航 */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={() => navigateYear(-1)}
-                className="group p-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
+                className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
               >
-                <ChevronLeft className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="font-bold text-lg min-w-[70px] text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="font-semibold text-lg min-w-[60px] text-center">
                 {currentYear}年
               </span>
               <button
                 type="button"
                 onClick={() => navigateYear(1)}
-                className="group p-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
+                className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
               >
-                <ChevronRight className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
             
@@ -164,19 +164,19 @@ export function DatePicker({ value, onChange, placeholder = "选择日期", clas
               <button
                 type="button"
                 onClick={() => navigateMonth(-1)}
-                className="group p-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
+                className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
               >
-                <ChevronLeft className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="font-bold min-w-[50px] text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="font-semibold min-w-[40px] text-center">
                 {monthNames[currentMonth]}
               </span>
               <button
                 type="button"
                 onClick={() => navigateMonth(1)}
-                className="group p-2 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
+                className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
               >
-                <ChevronRight className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -184,7 +184,7 @@ export function DatePicker({ value, onChange, placeholder = "选择日期", clas
           {/* 星期标题 */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {weekdays.map(day => (
-              <div key={day} className="text-center text-sm font-bold text-gray-700 py-2">
+              <div key={day} className="text-center text-sm font-medium text-gray-600 py-2">
                 {day}
               </div>
             ))}
@@ -198,12 +198,12 @@ export function DatePicker({ value, onChange, placeholder = "选择日期", clas
                   <button
                     type="button"
                     onClick={() => handleDateSelect(day)}
-                    className={`w-full h-full text-sm rounded-lg transition-all duration-300 flex items-center justify-center font-medium shadow-sm hover:shadow-md transform hover:scale-105 ${
+                    className={`w-full h-full text-sm rounded transition-colors duration-200 flex items-center justify-center ${
                       isSelectedDate(day)
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold shadow-lg'
+                        ? 'bg-blue-600 text-white font-semibold'
                         : isToday(day)
-                        ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 font-bold border-2 border-blue-300'
-                        : 'hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-gray-700'
+                        ? 'bg-blue-100 text-blue-800 font-medium'
+                        : 'hover:bg-gray-100 text-gray-700'
                     }`}
                   >
                     {day}
@@ -214,7 +214,7 @@ export function DatePicker({ value, onChange, placeholder = "选择日期", clas
           </div>
 
           {/* 快捷操作 */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-3 border-t border-gray-200">
             <button
               type="button"
               onClick={() => {
@@ -225,7 +225,7 @@ export function DatePicker({ value, onChange, placeholder = "选择日期", clas
                 onChange(`${year}-${month}-${day}`);
                 setIsOpen(false);
               }}
-              className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg hover:from-blue-100 hover:to-purple-100 transition-all duration-300 shadow-sm hover:shadow-md"
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
               今天
             </button>

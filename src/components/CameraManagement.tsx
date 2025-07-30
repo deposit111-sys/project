@@ -81,23 +81,18 @@ export function CameraManagement({ cameras, onAddCamera, onDeleteCamera }: Camer
   });
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300">
-      <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center group">
-        <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg mr-3 group-hover:rotate-12 transition-transform duration-300">
-          <Camera className="h-5 w-5 text-white" />
-        </div>
-        相机型号管理
-      </h2>
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h2 className="text-xl font-bold text-gray-800 mb-4">相机型号管理</h2>
       
       <div className="space-y-4">
         {error && (
-          <div className="flex items-center p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl shadow-sm">
+          <div className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
             <span className="text-red-700 text-sm">{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="flex items-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl shadow-sm">
+          <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
             <span className="text-green-700 text-sm">{success}</span>
           </div>
         )}
@@ -108,48 +103,45 @@ export function CameraManagement({ cameras, onAddCamera, onDeleteCamera }: Camer
             value={newModel}
             onChange={(e) => setNewModel(e.target.value)}
             placeholder="相机型号"
-            className="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 min-w-0 text-sm shadow-sm focus:shadow-md"
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
           />
           <input
             type="text"
             value={newSerial}
             onChange={(e) => setNewSerial(e.target.value)}
             placeholder="相机编号"
-            className="flex-1 p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 min-w-0 text-sm shadow-sm focus:shadow-md"
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
             onKeyPress={(e) => e.key === 'Enter' && handleAddCamera()}
           />
           <button
             onClick={handleAddCamera}
-            className="group px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 focus:ring-4 focus:ring-blue-200 transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 flex items-center shadow-sm hover:shadow-md text-sm"
           >
-            <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform duration-300" />
+            <Plus className="h-4 w-4" />
           </button>
         </div>
 
         <div>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="group flex items-center justify-between w-full p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl hover:from-gray-100 hover:to-blue-100 focus:ring-2 focus:ring-gray-200 transition-all duration-300 shadow-sm hover:shadow-md"
+            className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-lg hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 transition-all duration-200"
           >
             <span className="font-medium">相机库存 ({cameras.length}台)</span>
-            {isExpanded ? 
-              <ChevronUp className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" /> : 
-              <ChevronDown className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
-            }
+            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
           
           {isExpanded && (
             <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
               {Object.entries(groupedCameras).map(([model, cameraList]) => (
-                <div key={model} className="border border-gray-200 rounded-xl p-4 bg-gradient-to-r from-white to-gray-50 shadow-sm hover:shadow-md transition-all duration-300">
+                <div key={model} className="border rounded-lg p-3">
                   <h3 className="font-medium text-gray-800 mb-2">{model} ({cameraList.length}台)</h3>
                   <div className="space-y-1">
                     {cameraList.map(camera => (
-                      <div key={camera.id} className="group flex items-center justify-between py-2 px-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg hover:from-gray-100 hover:to-blue-100 transition-all duration-300">
+                      <div key={camera.id} className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded">
                         <span className="text-sm text-gray-600">编号: {camera.serialNumber}</span>
                         <button
                           onClick={() => onDeleteCamera(camera.id)}
-                          className="text-red-600 hover:bg-red-50 p-2 rounded-lg focus:ring-2 focus:ring-red-200 transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110"
+                          className="text-red-600 hover:bg-red-50 p-1 rounded focus:ring-2 focus:ring-red-200 transition-all duration-200"
                           title="删除相机"
                         >
                           <Trash2 className="h-3 w-3" />

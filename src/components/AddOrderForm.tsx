@@ -149,11 +149,9 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
   const uniqueModels = [...new Set(cameras.map(cam => cam.model))];
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300">
-      <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center group">
-        <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mr-3 group-hover:rotate-180 transition-transform duration-500">
-          <Plus className="h-5 w-5 text-white" />
-        </div>
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
+        <Plus className="h-5 w-5 mr-2" />
         添加租赁订单
       </h2>
       
@@ -298,23 +296,21 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
 
         <button
           type="submit"
-          className="group w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl hover:from-blue-600 hover:to-purple-700 focus:ring-4 focus:ring-blue-200 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm"
+          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md text-sm"
         >
-          <span className="group-hover:scale-105 transition-transform duration-300 inline-block">
           添加租赁订单
-          </span>
         </button>
         
         {/* 反馈消息显示在按钮下方 */}
         {error && (
-          <div className="flex items-start p-4 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl mt-4 shadow-sm">
+          <div className="flex items-start p-3 bg-red-50 border border-red-200 rounded-lg mt-4">
             <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
             <span className="text-red-700 text-sm leading-relaxed">{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="flex items-start p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl mt-4 shadow-sm">
+          <div className="flex items-start p-3 bg-green-50 border border-green-200 rounded-lg mt-4">
             <CheckCircle className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
             <span className="text-green-700 text-sm leading-relaxed">{success}</span>
           </div>
