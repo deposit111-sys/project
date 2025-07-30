@@ -62,7 +62,7 @@ export function PickupReturnSchedule({
   const handleReturnConfirm = (orderId: string) => {
     onConfirmReturn(orderId);
   };
-  return (
+
   const handleEarlyPickupClick = (order: RentalOrder) => {
     setSelectedOrderForEarlyPickup(order);
     setShowEarlyPickupModal(true);
@@ -81,6 +81,7 @@ export function PickupReturnSchedule({
     setSelectedOrderForEarlyPickup(null);
   };
 
+  return (
     <div>
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
