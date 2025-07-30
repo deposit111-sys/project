@@ -17,7 +17,7 @@ export function exportToExcel(
     '取机状态',
     '还机状态',
     '逾期天数',
-    '逾期还机日期',
+    '实际还机日期',
     '提前取机日期',
     '定金状态',
     '备注',
@@ -52,18 +52,13 @@ export function exportToExcel(
     return diffDays > 0 ? `${diffDays}天` : '';
   };
 
-  // 获取逾期还机日期
-  const getOverdueReturnDate = (order: RentalOrder): string => {
+  // 获取实际还机日期
+  const getActualReturnDate = (order: RentalOrder): string => {
     if (confirmedReturns.includes(order.id)) {
-      return ''; // 已还机
+      // 已还机，返回实际还机日期（今天）
+      return today;
     }
-    if (!confirmedPickups.includes(order.id)) {
-      return ''; // 未取机
-    }
-    if (order.returnDate >= today) {
-      return ''; // 未逾期
-    }
-    return `${order.returnDate} ${timeMap[order.returnTime]}`;
+    return ''; // 未还机
   };
 
   // 获取提前取机日期
@@ -122,7 +117,7 @@ export function exportToExcel(
       getPickupStatus(order),
       getReturnStatus(order),
       getOverdueDays(order),
-      getOverdueReturnDate(order),
+      getActualReturnDate(order),
       getEarlyPickupDate(order),
       order.depositStatus,
       order.notes,
