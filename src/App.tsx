@@ -202,6 +202,7 @@ function App() {
                   <ScheduleCalendar
                     cameras={cameras}
                     orders={orders}
+                    confirmedReturns={confirmedReturns}
                   />
                 )}
                 {activeTab === 'search' && (

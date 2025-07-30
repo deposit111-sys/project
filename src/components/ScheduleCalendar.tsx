@@ -6,9 +6,10 @@ import { Filter, ChevronLeft, ChevronRight, Maximize2, Minimize2, X, ZoomIn, Zoo
 interface ScheduleCalendarProps {
   cameras: Camera[];
   orders: RentalOrder[];
+  confirmedReturns?: string[];
 }
 
-export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
+export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: ScheduleCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedModel, setSelectedModel] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -219,10 +220,10 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
       return 'available';
     }
     
-    // 检查是否逾期未还
-    const isOverdue = conflictingOrder.returnDate < today;
+    // 检查是否逾期未还 - 只有在还机日期已过且未确认还机的情况下才算逾期
+    const isOverdue = conflictingOrder.returnDate < today && !confirmedReturns.includes(conflictingOrder.id);
     return isOverdue ? 'overdue' : 'occupied';
-  }, [orders]);
+  }, [orders, confirmedReturns]);
 
   // 获取某日期的所有订单
   const getOrdersForDate = useCallback((dateStr: string) => {
@@ -231,9 +232,9 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
       dateStr >= order.pickupDate && dateStr <= order.returnDate
     ).map(order => ({
       ...order,
-      isOverdue: order.returnDate < today
+      isOverdue: order.returnDate < today && !confirmedReturns.includes(order.id)
     }));
-  }, [orders]);
+  }, [orders, confirmedReturns]);
 
   // 保存滚动位置
   const saveScrollPosition = useCallback(() => {
@@ -337,6 +338,7 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
 
   // 清理定时器和动画帧
   useEffect(() => {
+              ${order.isOverdue ? '<div class="text-yellow-600 font-medium text-xs mb-1">⚠️ 逾期未还</div>' : ''}
     return () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
@@ -480,6 +482,7 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
                 title="放大"
               >
                 <ZoomIn className="h-4 w-4" />
+              ${order.isOverdue ? `<div class="text-yellow-600 text-xs">应还: ${formatDate(order.returnDate)}</div>` : ''}
               </button>
             </div>
           )}
@@ -583,7 +586,9 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
                         <div
                           key={slot.key}
                           className={`text-xs p-1 rounded text-center transition-colors duration-200 ${
-                            getScheduleStatus(camera, date, slot.key) === 'occupied'
+                            getScheduleStatus(camera, date, slot.key) === 'overdue'
+                              ? 'bg-yellow-500 text-white border border-yellow-600'
+                              : getScheduleStatus(camera, date, slot.key) === 'occupied'
                               ? 'bg-red-500 text-white border border-red-600'
                               : 'bg-green-100 text-green-800 border border-green-200'
                           }`}
