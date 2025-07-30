@@ -174,6 +174,9 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
     
+    // 获取当前日期用于判断逾期
+    const today = new Date().toISOString().split('T')[0];
+    
     const conflictingOrder = orders.find(order => {
       // 检查相机是否匹配
       if (order.cameraModel !== camera.model || order.cameraSerialNumber !== camera.serialNumber) {
@@ -212,14 +215,24 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
       return true;
     });
     
-    return conflictingOrder ? 'occupied' : 'available';
+    if (!conflictingOrder) {
+      return 'available';
+    }
+    
+    // 检查是否逾期未还
+    const isOverdue = conflictingOrder.returnDate < today;
+    return isOverdue ? 'overdue' : 'occupied';
   }, [orders]);
 
   // 获取某日期的所有订单
   const getOrdersForDate = useCallback((dateStr: string) => {
+    const today = new Date().toISOString().split('T')[0];
     return orders.filter(order =>
       dateStr >= order.pickupDate && dateStr <= order.returnDate
-    );
+    ).map(order => ({
+      ...order,
+      isOverdue: order.returnDate < today
+    }));
   }, [orders]);
 
   // 保存滚动位置
@@ -592,6 +605,10 @@ export function ScheduleCalendar({ cameras, orders }: ScheduleCalendarProps) {
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-red-500 border border-red-600 rounded"></div>
           <span className="text-gray-600">已租赁</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-yellow-500 border border-yellow-600 rounded"></div>
+          <span className="text-gray-600">逾期未还</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-green-100 border border-green-200 rounded"></div>
