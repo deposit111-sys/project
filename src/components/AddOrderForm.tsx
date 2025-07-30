@@ -38,7 +38,20 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
 
   const handleModelChange = (model: string) => {
     setFormData(prev => ({ ...prev, cameraModel: model, cameraSerialNumber: '' }));
-    const serials = cameras.filter(cam => cam.model === model).map(cam => cam.serialNumber);
+    const serials = cameras
+      .filter(cam => cam.model === model)
+      .map(cam => cam.serialNumber)
+      .sort((a, b) => {
+        // 尝试按数字排序，如果不是数字则按字符串排序
+        const aNum = parseInt(a, 10);
+        const bNum = parseInt(b, 10);
+        
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return aNum - bNum; // 数字升序
+        } else {
+          return a.localeCompare(b); // 字符串升序
+        }
+      });
     setAvailableSerials(serials);
   };
 
