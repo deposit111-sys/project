@@ -409,11 +409,12 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
                 </div>
               </div>
               <div className="space-y-2 mt-2 md:mt-0">
-                {confirmAction.type === 'pickup' 
-                  ? '确认后，该订单将标记为已取机状态。'
-                  : '确认后，该订单将标记为已还机状态。'
-                  <span className="ml-1 text-xs break-all">
-              </p>
+                <p>
+                  {confirmAction.type === 'pickup' 
+                    ? '确认后，该订单将标记为已取机状态。'
+                    : '确认后，该订单将标记为已还机状态。'
+                  }
+                </p>
             </div>
             <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
               <button
