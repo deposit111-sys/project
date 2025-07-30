@@ -178,6 +178,31 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
     // 获取当前日期用于判断逾期
     const today = new Date().toISOString().split('T')[0];
     
+    // 首先检查是否有逾期未还的订单（优先级最高）
+    const overdueOrder = orders.find(order => {
+      // 检查相机是否匹配
+      if (order.cameraModel !== camera.model || order.cameraSerialNumber !== camera.serialNumber) {
+        return false;
+      }
+      
+      // 检查是否逾期未还：还机日期已过且未确认还机
+      const isOverdue = order.returnDate < today && !confirmedReturns.includes(order.id);
+      if (!isOverdue) {
+        return false;
+      }
+      
+      // 如果逾期未还，则从还机日期的下一天开始到今天都应该标记为逾期
+      const nextDayAfterReturn = new Date(order.returnDate);
+      nextDayAfterReturn.setDate(nextDayAfterReturn.getDate() + 1);
+      const nextDayStr = nextDayAfterReturn.toISOString().split('T')[0];
+      
+      return dateStr >= nextDayStr && dateStr <= today;
+    });
+    
+    if (overdueOrder) {
+      return 'overdue';
+    }
+    
     const conflictingOrder = orders.find(order => {
       // 检查相机是否匹配
       if (order.cameraModel !== camera.model || order.cameraSerialNumber !== camera.serialNumber) {
@@ -220,20 +245,57 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
       return 'available';
     }
     
-    // 检查是否逾期未还 - 只有在还机日期已过且未确认还机的情况下才算逾期
-    const isOverdue = conflictingOrder.returnDate < today && !confirmedReturns.includes(conflictingOrder.id);
-    return isOverdue ? 'overdue' : 'occupied';
+    // 正常租赁期内的订单标记为已占用
+    return 'occupied';
   }, [orders, confirmedReturns]);
 
   // 获取某日期的所有订单
   const getOrdersForDate = useCallback((dateStr: string) => {
     const today = new Date().toISOString().split('T')[0];
-    return orders.filter(order =>
+    
+    // 获取正常租赁期内的订单
+    const normalOrders = orders.filter(order =>
       dateStr >= order.pickupDate && dateStr <= order.returnDate
-    ).map(order => ({
-      ...order,
-      isOverdue: order.returnDate < today && !confirmedReturns.includes(order.id)
-    }));
+    );
+    
+    // 获取逾期未还的订单（从还机日期的下一天开始）
+    const overdueOrders = orders.filter(order => {
+      const isOverdue = order.returnDate < today && !confirmedReturns.includes(order.id);
+      if (!isOverdue) return false;
+      
+      const nextDayAfterReturn = new Date(order.returnDate);
+      nextDayAfterReturn.setDate(nextDayAfterReturn.getDate() + 1);
+      const nextDayStr = nextDayAfterReturn.toISOString().split('T')[0];
+      
+      return dateStr >= nextDayStr && dateStr <= today;
+    });
+    
+    // 合并订单并标记逾期状态
+    const allOrders = [
+      ...normalOrders.map(order => ({
+        ...order,
+        isOverdue: false
+      })),
+      ...overdueOrders.map(order => ({
+        ...order,
+        isOverdue: true
+      }))
+    ];
+    
+    // 去重（同一个订单可能同时在正常期和逾期期出现）
+    const uniqueOrders = allOrders.reduce((acc, order) => {
+      const existing = acc.find(o => o.id === order.id);
+      if (!existing) {
+        acc.push(order);
+      } else if (order.isOverdue) {
+        // 如果有逾期版本，优先使用逾期版本
+        const index = acc.findIndex(o => o.id === order.id);
+        acc[index] = order;
+      }
+      return acc;
+    }, [] as (RentalOrder & { isOverdue: boolean })[]);
+    
+    return uniqueOrders;
   }, [orders, confirmedReturns]);
 
   // 保存滚动位置
@@ -594,6 +656,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
                         >
                           {slot.label}
                         </div>
+                      ${order.isOverdue ? `<div class="text-yellow-600 font-medium text-xs">⚠️ 逾期未还 (应还: ${formatDate(order.returnDate)})</div>` : ''}
                       ))}
                     </div>
                   </td>
