@@ -338,7 +338,6 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
 
   // 清理定时器和动画帧
   useEffect(() => {
-              ${order.isOverdue ? '<div class="text-yellow-600 font-medium text-xs mb-1">⚠️ 逾期未还</div>' : ''}
     return () => {
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
