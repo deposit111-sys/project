@@ -33,6 +33,50 @@ export function exportToExcel(
   // 获取当前日期用于判断状态
   const today = new Date().toISOString().split('T')[0];
 
+  // 计算逾期天数
+  const getOverdueDays = (order: RentalOrder): string => {
+    if (confirmedReturns.includes(order.id)) {
+      return ''; // 已还机，无逾期
+    }
+    if (!confirmedPickups.includes(order.id)) {
+      return ''; // 未取机，无逾期
+    }
+    if (order.returnDate >= today) {
+      return ''; // 未到还机日期，无逾期
+    }
+    
+    const returnDate = new Date(order.returnDate);
+    const todayDate = new Date(today);
+    const diffTime = todayDate.getTime() - returnDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? `${diffDays}天` : '';
+  };
+
+  // 获取逾期还机日期
+  const getOverdueReturnDate = (order: RentalOrder): string => {
+    if (confirmedReturns.includes(order.id)) {
+      return ''; // 已还机
+    }
+    if (!confirmedPickups.includes(order.id)) {
+      return ''; // 未取机
+    }
+    if (order.returnDate >= today) {
+      return ''; // 未逾期
+    }
+    return `${order.returnDate} ${timeMap[order.returnTime]}`;
+  };
+
+  // 获取提前取机日期
+  const getEarlyPickupDate = (order: RentalOrder): string => {
+    if (!confirmedPickups.includes(order.id)) {
+      return ''; // 未取机
+    }
+    if (order.pickupDate <= today) {
+      return ''; // 正常取机或逾期取机
+    }
+    return `${today} (原定: ${order.pickupDate} ${timeMap[order.pickupTime]})`;
+  };
+
   // 获取取机状态
   const getPickupStatus = (order: RentalOrder): string => {
     if (confirmedPickups.includes(order.id)) {
@@ -92,50 +136,6 @@ export function exportToExcel(
       })
     ].join(','))
   ].join('\n');
-
-  // 计算逾期天数
-  const getOverdueDays = (order: RentalOrder): string => {
-    if (confirmedReturns.includes(order.id)) {
-      return ''; // 已还机，无逾期
-    }
-    if (!confirmedPickups.includes(order.id)) {
-      return ''; // 未取机，无逾期
-    }
-    if (order.returnDate >= today) {
-      return ''; // 未到还机日期，无逾期
-    }
-    
-    const returnDate = new Date(order.returnDate);
-    const todayDate = new Date(today);
-    const diffTime = todayDate.getTime() - returnDate.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? `${diffDays}天` : '';
-  };
-
-  // 获取逾期还机日期
-  const getOverdueReturnDate = (order: RentalOrder): string => {
-    if (confirmedReturns.includes(order.id)) {
-      return ''; // 已还机
-    }
-    if (!confirmedPickups.includes(order.id)) {
-      return ''; // 未取机
-    }
-    if (order.returnDate >= today) {
-      return ''; // 未逾期
-    }
-    return `${order.returnDate} ${timeMap[order.returnTime]}`;
-  };
-
-  // 获取提前取机日期
-  const getEarlyPickupDate = (order: RentalOrder): string => {
-    if (!confirmedPickups.includes(order.id)) {
-      return ''; // 未取机
-    }
-    if (order.pickupDate <= today) {
-      return ''; // 正常取机或逾期取机
-    }
-    return `${today} (原定: ${order.pickupDate} ${timeMap[order.pickupTime]})`;
-  };
 
   const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
