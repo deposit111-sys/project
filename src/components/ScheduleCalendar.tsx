@@ -142,7 +142,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
       }
       acc[camera.model].push(camera);
       return acc;
-    }, {} as Record<string, CameraType[]>);
+    }, {} as Record<string, Camera[]>);
 
     // 对每个型号的相机按编号降序排列
     Object.keys(groupedCameras).forEach(model => {
@@ -160,7 +160,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
     });
 
     // 将分组后的相机重新组合成一个数组
-    const sortedCameraList: CameraType[] = [];
+    const sortedCameraList: Camera[] = [];
     Object.keys(groupedCameras).sort().forEach(model => {
       sortedCameraList.push(...groupedCameras[model]);
     });
