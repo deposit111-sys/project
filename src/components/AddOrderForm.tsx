@@ -159,13 +159,13 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
       
       <form onSubmit={handleSubmit} className="space-y-4">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">相机型号</label>
             <select
               value={formData.cameraModel}
               onChange={(e) => handleModelChange(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 text-sm"
+              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 text-sm"
               required
             >
               <option value="">选择相机型号</option>
@@ -180,7 +180,7 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
             <select
               value={formData.cameraSerialNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, cameraSerialNumber: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 text-sm"
+              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 text-sm"
               required
               disabled={!formData.cameraModel}
             >
@@ -197,7 +197,7 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
               type="text"
               value={formData.renterName}
               onChange={(e) => setFormData(prev => ({ ...prev, renterName: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
+              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
               required
             />
           </div>
@@ -207,7 +207,7 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
             <select
               value={formData.customerService}
               onChange={(e) => setFormData(prev => ({ ...prev, customerService: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
+              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
               required
             >
               <option value="">选择客服号</option>
@@ -223,7 +223,7 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
               type="text"
               value={formData.salesperson}
               onChange={(e) => setFormData(prev => ({ ...prev, salesperson: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
+              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
               required
             />
           </div>
@@ -234,7 +234,7 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
               type="text"
               value={formData.depositStatus}
               onChange={(e) => setFormData(prev => ({ ...prev, depositStatus: e.target.value }))}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
+              className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm"
             />
           </div>
         </div>
@@ -242,18 +242,18 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
         <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">取机时间</label>
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <DatePicker
                 value={formData.pickupDate}
                 onChange={(date) => setFormData(prev => ({ ...prev, pickupDate: date }))}
                 placeholder="选择取机日期"
-                className="flex-1 min-w-[180px]"
+                className="flex-1 min-w-0"
                 required
               />
               <select
                 value={formData.pickupTime}
                 onChange={(e) => setFormData(prev => ({ ...prev, pickupTime: e.target.value as any }))}
-                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[80px] text-sm"
+                className="p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 sm:min-w-[80px] text-sm"
               >
                 {timeOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -264,18 +264,18 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">还机时间</label>
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <DatePicker
                 value={formData.returnDate}
                 onChange={(date) => setFormData(prev => ({ ...prev, returnDate: date }))}
                 placeholder="选择还机日期"
-                className="flex-1 min-w-[180px]"
+                className="flex-1 min-w-0"
                 required
               />
               <select
                 value={formData.returnTime}
                 onChange={(e) => setFormData(prev => ({ ...prev, returnTime: e.target.value as any }))}
-                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[80px] text-sm"
+                className="p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 sm:min-w-[80px] text-sm"
               >
                 {timeOptions.map(option => (
                   <option key={option.value} value={option.value}>{option.label}</option>
@@ -291,14 +291,14 @@ export function AddOrderForm({ cameras, orders, onAddOrder }: AddOrderFormProps)
             value={formData.notes}
             onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
             rows={3}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm resize-none"
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 min-w-0 text-sm resize-none"
             placeholder="请输入备注信息..."
           />
         </div>
 
         <button
           type="submit"
-          className="group w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl hover:from-blue-600 hover:to-purple-700 focus:ring-4 focus:ring-blue-200 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm"
+          className="group w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 sm:py-4 px-4 sm:px-6 rounded-xl hover:from-blue-600 hover:to-purple-700 focus:ring-4 focus:ring-blue-200 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm"
         >
           <span className="group-hover:scale-105 transition-transform duration-300 inline-block">
           添加租赁订单

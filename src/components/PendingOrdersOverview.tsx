@@ -241,7 +241,7 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
   return (
     <div className="space-y-6">
       {/* 统计概览 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 text-center">
           <Package className="h-8 w-8 text-orange-600 mx-auto mb-2" />
           <div className="text-3xl font-bold text-orange-600">{pendingOrders.pendingPickups.length}</div>
@@ -262,8 +262,8 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
       </div>
 
       {/* 排序控制 */}
-      <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-2 sm:space-y-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           <span className="text-sm font-medium text-gray-700">排序方式:</span>
           <button
             onClick={() => handleSort('date')}
@@ -408,11 +408,11 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">
+              <div className="space-y-2 mt-2 md:mt-0">
                 {confirmAction.type === 'pickup' 
                   ? '确认后，该订单将标记为已取机状态。'
                   : '确认后，该订单将标记为已还机状态。'
-                }
+                  <span className="ml-1 text-xs break-all">
               </p>
             </div>
             <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">

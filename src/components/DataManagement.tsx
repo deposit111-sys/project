@@ -160,7 +160,7 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
           </div>
 
           {/* 数据统计 */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl text-center shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105">
               <div className="text-2xl font-bold text-blue-600">{cameras.length}</div>
               <div className="text-sm text-blue-800">相机总数</div>

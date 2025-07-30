@@ -500,8 +500,8 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
 
   const CalendarContent = () => (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
           <div className="flex items-center space-x-2">
             <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
               <Filter className="h-4 w-4 text-white" />
@@ -509,7 +509,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
             <select
               value={selectedModel}
               onChange={(e) => handleModelChange(e.target.value)}
-              className="p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-sm shadow-sm focus:shadow-md bg-white/80 backdrop-blur-sm"
+              className="p-2 sm:p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-sm shadow-sm focus:shadow-md bg-white/80 backdrop-blur-sm min-w-[120px]"
             >
               <option value="">全部型号</option>
               {uniqueModels.map(model => (
@@ -520,14 +520,14 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
           
           <button
             onClick={handleFullscreenToggle}
-            className="group flex items-center space-x-2 p-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl focus:ring-2 focus:ring-gray-200 transition-all duration-300 shadow-sm hover:shadow-md"
+            className="group flex items-center space-x-2 p-2 sm:p-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl focus:ring-2 focus:ring-gray-200 transition-all duration-300 shadow-sm hover:shadow-md whitespace-nowrap"
             title={isFullscreen ? "退出全屏" : "全屏显示"}
           >
             {isFullscreen ? 
               <Minimize2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" /> : 
               <Maximize2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
             }
-            <span className="text-sm">{isFullscreen ? "退出全屏" : "全屏显示"}</span>
+            <span className="text-sm hidden sm:inline">{isFullscreen ? "退出全屏" : "全屏显示"}</span>
           </button>
 
           {isFullscreen && (
@@ -554,7 +554,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
           )}
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
           <div className="flex items-center space-x-2">
             <button
               onClick={() => navigateYear(-1)}
@@ -577,12 +577,12 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
         </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-2 mb-4">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
         {monthNames.map((monthName, index) => (
           <button
             key={index}
             onClick={() => selectMonth(index)}
-            className={`py-3 px-4 rounded-xl text-sm font-medium transition-all duration-300 focus:ring-2 focus:ring-blue-200 shadow-sm hover:shadow-md transform hover:scale-105 ${
+            className={`py-2 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 focus:ring-2 focus:ring-blue-200 shadow-sm hover:shadow-md transform hover:scale-105 ${
               month === index
                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
                 : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 border border-gray-200'
@@ -599,8 +599,8 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
         className="overflow-auto"
         style={{
           fontSize: `${zoomLevel}%`,
-          maxHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px',
-          minHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px',
+          maxHeight: isFullscreen ? 'calc(100vh - 200px)' : 'min(600px, calc(100vh - 400px))',
+          minHeight: isFullscreen ? 'calc(100vh - 200px)' : 'min(400px, calc(100vh - 500px))',
         }}
         onScroll={handleScroll}
       >
@@ -614,15 +614,15 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
         >
           <table 
             ref={calendarRef}
-            className={`w-full border-collapse border border-gray-300 shadow-lg rounded-xl overflow-hidden ${isFullscreen ? 'table-fixed' : ''}`}
+            className={`w-full border-collapse border border-gray-300 shadow-lg rounded-xl overflow-hidden ${isFullscreen ? 'table-fixed' : ''} min-w-[800px]`}
           >
           <thead>
             <tr>
-              <th className={`border border-gray-300 py-3 px-4 bg-gradient-to-r from-gray-50 to-blue-50 sticky left-0 font-bold text-gray-800 ${isFullscreen ? 'top-0 z-20' : 'top-0 z-20'}`}>日期/编号</th>
+              <th className={`border border-gray-300 py-2 sm:py-3 px-2 sm:px-4 bg-gradient-to-r from-gray-50 to-blue-50 sticky left-0 font-bold text-gray-800 text-xs sm:text-sm ${isFullscreen ? 'top-0 z-20' : 'top-0 z-20'} min-w-[100px]`}>日期/编号</th>
               {daysInMonth.map(date => (
                 <th 
                   key={date.toISOString()} 
-                  className={`border border-gray-300 py-3 px-4 bg-gradient-to-r from-gray-50 to-blue-50 min-w-[80px] font-bold text-gray-800 cursor-pointer hover:bg-gradient-to-r hover:from-blue-100 hover:to-purple-100 transition-all duration-300 ${isFullscreen ? 'sticky top-0 z-10' : 'sticky top-0 z-10'}`}
+                  className={`border border-gray-300 py-2 sm:py-3 px-2 sm:px-4 bg-gradient-to-r from-gray-50 to-blue-50 min-w-[60px] sm:min-w-[80px] font-bold text-gray-800 cursor-pointer hover:bg-gradient-to-r hover:from-blue-100 hover:to-purple-100 transition-all duration-300 text-xs sm:text-sm ${isFullscreen ? 'sticky top-0 z-10' : 'sticky top-0 z-10'}`}
                   onMouseEnter={(e) => handleMouseEnter(date, e)}
                   title="悬停查看当日订单详情"
                 >
@@ -634,8 +634,8 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
           <tbody>
             {sortedCameras.map(camera => (
               <tr key={camera.id}>
-                <td className={`border border-gray-300 p-4 bg-gradient-to-r from-gray-50 to-blue-50 sticky left-0 ${isFullscreen ? 'z-10' : 'z-10'}`}>
-                  <div className="text-sm">
+                <td className={`border border-gray-300 p-2 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50 sticky left-0 ${isFullscreen ? 'z-10' : 'z-10'} min-w-[100px]`}>
+                  <div className="text-xs sm:text-sm">
                     <div className="font-bold text-gray-800">{camera.model}</div>
                     <div className="text-gray-600">{camera.serialNumber}</div>
                   </div>
@@ -643,7 +643,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
                 {daysInMonth.map(date => (
                   <td 
                     key={date.toISOString()} 
-                    className="border border-gray-300 p-2 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300"
+                    className="border border-gray-300 p-1 sm:p-2 cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 min-w-[60px] sm:min-w-[80px]"
                     onMouseEnter={(e) => handleMouseEnter(date, e)}
                     title="悬停查看当日订单详情"
                   >
@@ -651,7 +651,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
                       {timeSlots.map(slot => (
                         <div
                           key={slot.key}
-                          className={`text-xs p-1 rounded-lg text-center transition-all duration-300 font-medium shadow-sm ${
+                          className={`text-xs p-0.5 sm:p-1 rounded-lg text-center transition-all duration-300 font-medium shadow-sm ${
                             getScheduleStatus(camera, date, slot.key) === 'overdue'
                               ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border border-yellow-600 shadow-md'
                               : getScheduleStatus(camera, date, slot.key) === 'occupied'
@@ -659,7 +659,8 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
                               : 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200'
                           }`}
                         >
-                          {slot.label}
+                          <span className="hidden sm:inline">{slot.label}</span>
+                          <span className="sm:hidden">{slot.label.charAt(0)}</span>
                         </div>
                       ))}
                     </div>
@@ -672,7 +673,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
         </div>
       </div>
 
-      <div className="flex items-center justify-center space-x-8 text-sm mt-6 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-8 text-sm mt-6 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl shadow-sm">
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-gradient-to-r from-red-400 to-pink-500 border border-red-600 rounded-lg shadow-sm"></div>
           <span className="text-gray-600">已租赁</span>
@@ -693,8 +694,8 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
     return (
       <div className="fixed inset-0 bg-white z-40 overflow-hidden">
         <div className="p-6 h-full flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-800">相机档期日历 - 全屏模式</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">相机档期日历 - 全屏模式</h2>
             <button
               onClick={handleFullscreenToggle}
               className="p-2 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
