@@ -415,6 +415,7 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
                     : '确认后，该订单将标记为已还机状态。'
                   }
                 </p>
+              </div>
             </div>
             <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
               <button
