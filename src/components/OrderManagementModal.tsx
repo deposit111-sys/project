@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { RentalOrder, Camera } from '../types';
+import { RentalOrder, Camera } from '../types';
 import { formatDateTime } from '../utils/dateUtils';
 import { checkScheduleConflict } from '../utils/dateUtils';
 import { Edit2, Trash2, X, Filter, Search, Calendar } from 'lucide-react';
@@ -178,10 +178,10 @@ export function OrderManagementModal({
   const customerServiceOptions = ['1', '2', '3', '郭', '雨'];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-xl max-w-7xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-7xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">租赁订单管理</h2>
+          <h2 className="text-2xl font-bold text-gray-800">租赁订单管理</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
@@ -191,7 +191,7 @@ export function OrderManagementModal({
         </div>
 
         {/* 筛选和搜索区域 */}
-        <div className="px-4 sm:px-6 py-4 bg-gray-50 border-b border-gray-200">
+        <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
           <div className="flex flex-wrap gap-4 items-center">
             {/* 月份筛选 */}
             <div className="flex items-center space-x-2">
@@ -200,7 +200,7 @@ export function OrderManagementModal({
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm min-w-[100px] sm:min-w-[120px]"
+                className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm min-w-[120px]"
               >
                 <option value="">全部月份</option>
                 {monthOptions.map(month => {
@@ -215,14 +215,14 @@ export function OrderManagementModal({
             </div>
 
             {/* 关键词搜索 */}
-            <div className="flex items-center space-x-2 flex-1 min-w-0 w-full sm:w-auto">
+            <div className="flex items-center space-x-2 flex-1 min-w-[200px]">
               <Search className="h-4 w-4 text-gray-600" />
-              <label className="text-sm font-medium text-gray-700 hidden sm:inline">搜索:</label>
+              <label className="text-sm font-medium text-gray-700">搜索:</label>
               <input
                 type="text"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder="搜索关键词..."
+                placeholder="输入相机型号、租借人、销售人员等关键词..."
                 className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
               />
             </div>
@@ -247,7 +247,7 @@ export function OrderManagementModal({
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 sm:p-6">
+        <div className="flex-1 overflow-auto p-6">
           {filteredOrders.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-gray-400 text-6xl mb-4">📋</div>
@@ -274,32 +274,32 @@ export function OrderManagementModal({
             </div>
           ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300 min-w-[800px]">
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">相机型号</th>
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">相机编号</th>
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">租借人</th>
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">客服号</th>
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">销售人员</th>
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">取机时间</th>
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">还机时间</th>
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">定金状态</th>
-                  <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">操作</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">相机型号</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">相机编号</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">租借人</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">客服号</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">销售人员</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">取机时间</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">还机时间</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">定金状态</th>
+                  <th className="border border-gray-300 p-3 text-left font-semibold">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOrders.map(order => (
                   <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">{order.cameraModel}</td>
-                    <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">{order.cameraSerialNumber}</td>
-                    <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">{order.renterName}</td>
-                    <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">{order.customerService}</td>
-                    <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">{order.salesperson}</td>
-                    <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">{formatDateTime(order.pickupDate, order.pickupTime)}</td>
-                    <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">{formatDateTime(order.returnDate, order.returnTime)}</td>
-                    <td className="border border-gray-300 p-2 sm:p-3 text-xs sm:text-sm">{order.depositStatus}</td>
-                    <td className="border border-gray-300 p-2 sm:p-3">
+                    <td className="border border-gray-300 p-3">{order.cameraModel}</td>
+                    <td className="border border-gray-300 p-3">{order.cameraSerialNumber}</td>
+                    <td className="border border-gray-300 p-3">{order.renterName}</td>
+                    <td className="border border-gray-300 p-3">{order.customerService}</td>
+                    <td className="border border-gray-300 p-3">{order.salesperson}</td>
+                    <td className="border border-gray-300 p-3">{formatDateTime(order.pickupDate, order.pickupTime)}</td>
+                    <td className="border border-gray-300 p-3">{formatDateTime(order.returnDate, order.returnTime)}</td>
+                    <td className="border border-gray-300 p-3">{order.depositStatus}</td>
+                    <td className="border border-gray-300 p-3">
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEdit(order)}

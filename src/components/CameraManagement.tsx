@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import type { Camera } from '../types';
-import { Plus, ChevronDown, ChevronUp, Trash2, Camera as CameraIcon } from 'lucide-react';
+import { Camera } from '../types';
+import { Plus, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 interface CameraManagementProps {
   cameras: Camera[];
@@ -84,7 +84,7 @@ export function CameraManagement({ cameras, onAddCamera, onDeleteCamera }: Camer
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300">
       <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center group">
         <div className="p-2 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg mr-3 group-hover:rotate-12 transition-transform duration-300">
-          <CameraIcon className="h-5 w-5 text-white" />
+          <Camera className="h-5 w-5 text-white" />
         </div>
         相机型号管理
       </h2>

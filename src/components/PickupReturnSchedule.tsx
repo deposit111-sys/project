@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { RentalOrder } from '../types';
+import { RentalOrder } from '../types';
 import { formatDate } from '../utils/dateUtils';
 import { Calendar, CheckCircle2, Circle, AlertCircle, Package, PackageX } from 'lucide-react';
 import { DatePicker } from './DatePicker';
@@ -64,13 +64,13 @@ export function PickupReturnSchedule({
           value={selectedDate}
           onChange={(date) => setSelectedDate(date)}
           placeholder="选择查看日期"
-          className="w-full sm:w-auto sm:min-w-[180px]"
+          className="min-w-[180px]"
         />
       </div>
 
       {/* 未取未还统计卡片 */}
       {(pendingPickupOrders.length > 0 || pendingReturnOrders.length > 0) && (
-        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* 未取订单统计 */}
           {pendingPickupOrders.length > 0 && (
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -161,7 +161,7 @@ export function PickupReturnSchedule({
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-800">取机安排</h3>
@@ -257,7 +257,7 @@ export function PickupReturnSchedule({
 
       <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
         <h3 className="text-lg font-semibold text-gray-800 mb-3">当日统计</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
           <div className="p-3 bg-white rounded-lg">
             <div className="text-2xl font-bold text-blue-600">{pickupOrders.length}</div>
             <div className="text-sm text-gray-600">取机数量</div>
