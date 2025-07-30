@@ -656,7 +656,6 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
                         >
                           {slot.label}
                         </div>
-                      ${order.isOverdue ? `<div class="text-yellow-600 font-medium text-xs">⚠️ 逾期未还 (应还: ${formatDate(order.returnDate)})</div>` : ''}
                       ))}
                     </div>
                   </td>
