@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, RentalOrder } from '../types';
+import type { Camera, RentalOrder } from '../types';
 import { isDateInRange } from '../utils/dateUtils';
 import { Search, Calendar } from 'lucide-react';
 import { DatePicker } from './DatePicker';

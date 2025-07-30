@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { RentalOrder } from '../types';
+import type { RentalOrder } from '../types';
 import { formatDateTime } from '../utils/dateUtils';
 import { AlertTriangle, Package, PackageX, Calendar, User, Phone, DollarSign, FileText, ChevronDown, ChevronUp, CheckCircle2, Circle } from 'lucide-react';
 

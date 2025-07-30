@@ -1,7 +1,7 @@
 import React from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Camera as CameraType, RentalOrder } from './types';
+import type { Camera as CameraType, RentalOrder } from './types';
 import { StatCard } from './components/StatCard';
 import { AddOrderForm } from './components/AddOrderForm';
 import { OrderManagementModal } from './components/OrderManagementModal';

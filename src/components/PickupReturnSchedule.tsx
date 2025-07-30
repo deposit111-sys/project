@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RentalOrder } from '../types';
+import type { RentalOrder } from '../types';
 import { formatDate } from '../utils/dateUtils';
 import { Calendar, CheckCircle2, Circle, AlertCircle, Package, PackageX } from 'lucide-react';
 import { DatePicker } from './DatePicker';

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Camera, RentalOrder } from '../types';
+import type { Camera, RentalOrder } from '../types';
 import { getDaysInMonth } from '../utils/dateUtils';
 import { Filter, ChevronLeft, ChevronRight, Maximize2, Minimize2, X, ZoomIn, ZoomOut } from 'lucide-react';
 

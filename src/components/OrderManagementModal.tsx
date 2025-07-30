@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RentalOrder, Camera } from '../types';
+import type { RentalOrder, Camera } from '../types';
 import { formatDateTime } from '../utils/dateUtils';
 import { checkScheduleConflict } from '../utils/dateUtils';
 import { Edit2, Trash2, X, Filter, Search, Calendar } from 'lucide-react';
