@@ -608,15 +608,16 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
         >
           <table 
             ref={calendarRef}
-            className={`w-full border-collapse border border-gray-300 ${isFullscreen ? 'table-fixed' : ''}`}
+            className="w-full border-collapse border border-gray-300"
+            style={isFullscreen ? { minWidth: '1200px' } : undefined}
           >
           <thead>
             <tr>
-              <th className={`border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 font-semibold ${isFullscreen ? 'top-0 z-20' : 'top-0 z-20'}`}>日期/编号</th>
+              <th className="border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 top-0 z-20 font-semibold">日期/编号</th>
               {daysInMonth.map(date => (
                 <th 
                   key={date.toISOString()} 
-                  className={`border border-gray-300 py-2 px-3 bg-gray-50 min-w-[80px] font-semibold cursor-pointer hover:bg-gray-100 transition-colors duration-200 ${isFullscreen ? 'sticky top-0 z-10' : 'sticky top-0 z-10'}`}
+                  className="border border-gray-300 py-2 px-3 bg-gray-50 min-w-[80px] font-semibold cursor-pointer hover:bg-gray-100 transition-colors duration-200 sticky top-0 z-10"
                   onMouseEnter={(e) => handleMouseEnter(date, e)}
                   title="悬停查看当日订单详情"
                 >
@@ -628,7 +629,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
           <tbody>
             {sortedCameras.map(camera => (
               <tr key={camera.id}>
-                <td className={`border border-gray-300 p-3 bg-gray-50 sticky left-0 ${isFullscreen ? 'z-10' : 'z-10'}`}>
+                <td className="border border-gray-300 p-3 bg-gray-50 sticky left-0 z-10">
                   <div className="text-sm">
                     <div className="font-medium">{camera.model}</div>
                     <div className="text-gray-600">{camera.serialNumber}</div>
