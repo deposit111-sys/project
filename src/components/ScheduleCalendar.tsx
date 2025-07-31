@@ -543,7 +543,6 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
                 title="放大"
               >
                 <ZoomIn className="h-4 w-4" />
-              ${order.isOverdue ? `<div class="text-yellow-600 text-xs">应还: ${formatDate(order.returnDate)}</div>` : ''}
               </button>
             </div>
           )}
