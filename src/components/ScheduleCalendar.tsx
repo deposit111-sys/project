@@ -598,19 +598,16 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
         }}
         onScroll={handleScroll}
       >
-        <div
+        <table 
+          ref={calendarRef}
+          className="w-full border-collapse border border-gray-300"
           style={{
+            ...(isFullscreen ? { minWidth: '1200px' } : {}),
             transform: `scale(${zoomLevel / 100})`,
             transformOrigin: 'top left',
             width: `${100 / (zoomLevel / 100)}%`,
-            height: `${100 / (zoomLevel / 100)}%`,
           }}
         >
-          <table 
-            ref={calendarRef}
-            className="w-full border-collapse border border-gray-300"
-            style={isFullscreen ? { minWidth: '1200px' } : undefined}
-          >
           <thead>
             <tr>
               <th className="border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 top-0 z-20 font-semibold">日期/编号</th>
@@ -663,8 +660,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
               </tr>
             ))}
           </tbody>
-          </table>
-        </div>
+        </table>
       </div>
 
       <div className="flex items-center justify-center space-x-6 text-sm">
