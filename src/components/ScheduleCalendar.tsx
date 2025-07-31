@@ -592,75 +592,80 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
         ref={containerRef}
         className="overflow-auto"
         style={{
-          fontSize: `${zoomLevel}%`,
           maxHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px',
           minHeight: isFullscreen ? 'calc(100vh - 200px)' : '600px',
         }}
         onScroll={handleScroll}
       >
-        <table 
-          ref={calendarRef}
-          className="w-full border-collapse border border-gray-300"
+        <div
           style={{
-            ...(isFullscreen ? { minWidth: '1200px' } : {}),
-            transform: `scale(${zoomLevel / 100})`,
+            transform: isFullscreen ? `scale(${zoomLevel / 100})` : 'none',
             transformOrigin: 'top left',
-            width: `${100 / (zoomLevel / 100)}%`,
+            width: isFullscreen ? `${100 / (zoomLevel / 100)}%` : '100%',
+            fontSize: `${zoomLevel}%`,
           }}
         >
-          <thead>
-            <tr>
-              <th className="border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 top-0 z-20 font-semibold">日期/编号</th>
-              {daysInMonth.map(date => (
-                <th 
-                  key={date.toISOString()} 
-                  className="border border-gray-300 py-2 px-3 bg-gray-50 min-w-[80px] font-semibold cursor-pointer hover:bg-gray-100 transition-colors duration-200 sticky top-0 z-10"
-                  onMouseEnter={(e) => handleMouseEnter(date, e)}
-                  title="悬停查看当日订单详情"
-                >
-                  {date.getDate()}日
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {sortedCameras.map(camera => (
-              <tr key={camera.id}>
-                <td className="border border-gray-300 p-3 bg-gray-50 sticky left-0 z-10">
-                  <div className="text-sm">
-                    <div className="font-medium">{camera.model}</div>
-                    <div className="text-gray-600">{camera.serialNumber}</div>
-                  </div>
-                </td>
+          <table 
+            ref={calendarRef}
+            className="w-full border-collapse border border-gray-300"
+            style={{
+              ...(isFullscreen ? { minWidth: '1200px' } : {}),
+            }}
+          >
+            <thead>
+              <tr>
+                <th className="border border-gray-300 py-2 px-3 bg-gray-50 sticky left-0 top-0 z-20 font-semibold">日期/编号</th>
                 {daysInMonth.map(date => (
-                  <td 
+                  <th 
                     key={date.toISOString()} 
-                    className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                    className="border border-gray-300 py-2 px-3 bg-gray-50 min-w-[80px] font-semibold cursor-pointer hover:bg-gray-100 transition-colors duration-200 sticky top-0 z-10"
                     onMouseEnter={(e) => handleMouseEnter(date, e)}
                     title="悬停查看当日订单详情"
                   >
-                    <div className="space-y-1">
-                      {timeSlots.map(slot => (
-                        <div
-                          key={slot.key}
-                          className={`text-xs p-1 rounded text-center transition-colors duration-200 ${
-                            getScheduleStatus(camera, date, slot.key) === 'overdue'
-                              ? 'bg-yellow-500 text-white border border-yellow-600'
-                              : getScheduleStatus(camera, date, slot.key) === 'occupied'
-                              ? 'bg-red-500 text-white border border-red-600'
-                              : 'bg-green-100 text-green-800 border border-green-200'
-                          }`}
-                        >
-                          {slot.label}
-                        </div>
-                      ))}
-                    </div>
-                  </td>
+                    {date.getDate()}日
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sortedCameras.map(camera => (
+                <tr key={camera.id}>
+                  <td className="border border-gray-300 p-3 bg-gray-50 sticky left-0 z-10">
+                    <div className="text-sm">
+                      <div className="font-medium">{camera.model}</div>
+                      <div className="text-gray-600">{camera.serialNumber}</div>
+                    </div>
+                  </td>
+                  {daysInMonth.map(date => (
+                    <td 
+                      key={date.toISOString()} 
+                      className="border border-gray-300 p-2 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                      onMouseEnter={(e) => handleMouseEnter(date, e)}
+                      title="悬停查看当日订单详情"
+                    >
+                      <div className="space-y-1">
+                        {timeSlots.map(slot => (
+                          <div
+                            key={slot.key}
+                            className={`text-xs p-1 rounded text-center transition-colors duration-200 ${
+                              getScheduleStatus(camera, date, slot.key) === 'overdue'
+                                ? 'bg-yellow-500 text-white border border-yellow-600'
+                                : getScheduleStatus(camera, date, slot.key) === 'occupied'
+                                ? 'bg-red-500 text-white border border-red-600'
+                                : 'bg-green-100 text-green-800 border border-green-200'
+                            }`}
+                          >
+                            {slot.label}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="flex items-center justify-center space-x-6 text-sm">
