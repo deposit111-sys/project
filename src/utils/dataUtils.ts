@@ -316,7 +316,7 @@ export function getStorageInfo(): {
     total,
     percentage,
     camerasSize,
-    ordersSize
+    ordersSize,
     backupSize
   };
 }
