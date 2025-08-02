@@ -32,6 +32,10 @@ interface DataManagementProps {
 
 export function DataManagement({ cameras, orders, onImportData }: DataManagementProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [healthStatus, setHealthStatus] = useState<{
+    status: 'healthy' | 'warning' | 'critical';
+    lastCheck: string;
+  } | null>(null);
   const [importStatus, setImportStatus] = useState<{
     type: 'success' | 'error' | null;
     message: string;
