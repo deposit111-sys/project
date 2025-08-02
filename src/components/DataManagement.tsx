@@ -4,6 +4,8 @@ import {
   exportSystemData, 
   importSystemData, 
   clearAllLocalData, 
+  clearBusinessDataOnly,
+  checkAndRepairData,
   getStorageInfo, 
   formatFileSize,
   SystemData 
@@ -187,6 +189,44 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
               导入数据备份
             </button>
 
+            <button
+              onClick={() => {
+                const result = checkAndRepairData();
+                setImportStatus({
+                  type: result.repaired ? 'success' : 'error',
+                  message: result.repaired 
+                    ? `数据修复完成：${result.issues.join(', ')}` 
+                    : '数据检查完成，未发现问题'
+                });
+                setTimeout(() => setImportStatus({ type: null, message: '' }), 5000);
+              }}
+              className="w-full flex items-center justify-center px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 focus:ring-4 focus:ring-yellow-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+            >
+              <HardDrive className="h-4 w-4 mr-2" />
+              检查并修复数据
+            </button>
+
+            <button
+              onClick={() => {
+                if (window.confirm(
+                  '确定要清空业务数据吗？\n\n' +
+                  '此操作将清空相机和订单数据，但会保留确认状态。\n\n' +
+                  '建议在清空前先导出数据备份。'
+                )) {
+                  clearBusinessDataOnly();
+                  onImportData([], []);
+                  setImportStatus({
+                    type: 'success',
+                    message: '业务数据已清空，确认状态已保留'
+                  });
+                  setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
+                }
+              }}
+              className="w-full flex items-center justify-center px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 focus:ring-4 focus:ring-orange-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              清空业务数据（保留确认状态）
+            </button>
             <button
               onClick={handleClearData}
               className="w-full flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"

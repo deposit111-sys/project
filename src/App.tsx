@@ -11,6 +11,7 @@ import { ScheduleSearch } from './components/ScheduleSearch';
 import { PickupReturnSchedule } from './components/PickupReturnSchedule';
 import { PendingOrdersOverview } from './components/PendingOrdersOverview';
 import { DataManagement } from './components/DataManagement';
+import { checkAndRepairData } from './utils/dataUtils';
 import { exportToExcel } from './utils/exportUtils';
 
 function App() {
@@ -20,6 +21,14 @@ function App() {
   const [activeTab, setActiveTab] = useLocalStorage<string>('activeTab', 'calendar');
   const [confirmedPickups, setConfirmedPickups] = useLocalStorage<string[]>('confirmedPickups', []);
   const [confirmedReturns, setConfirmedReturns] = useLocalStorage<string[]>('confirmedReturns', []);
+
+  // 应用启动时检查和修复数据
+  React.useEffect(() => {
+    const result = checkAndRepairData();
+    if (result.repaired) {
+      console.log('Data repair completed on startup:', result.issues);
+    }
+  }, []);
 
   const handleSwitchToCalendar = (model: string, date: string) => {
     // 切换到日历标签页

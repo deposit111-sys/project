@@ -60,12 +60,97 @@ export function importSystemData(file: File): Promise<SystemData> {
 
 // 清空所有本地数据
 export function clearAllLocalData(): void {
-  localStorage.removeItem('cameras');
-  localStorage.removeItem('orders');
-  localStorage.removeItem('confirmedPickups');
-  localStorage.removeItem('confirmedReturns');
-  localStorage.removeItem('showOrderModal');
-  localStorage.removeItem('activeTab');
+  // 警告：这个函数会清空所有数据，包括备份
+  const keysToRemove = [
+    'cameras',
+    'orders', 
+    'confirmedPickups',
+    'confirmedReturns',
+    'showOrderModal',
+    'activeTab',
+    // 备份键
+    'cameras_backup',
+    'orders_backup',
+    'confirmedPickups_backup',
+    'confirmedReturns_backup'
+  ];
+  
+  keysToRemove.forEach(key => {
+    try {
+      localStorage.removeItem(key);
+      console.log(`Removed localStorage key: ${key}`);
+    } catch (error) {
+      console.error(`Failed to remove localStorage key "${key}":`, error);
+    }
+  });
+}
+
+// 新增：仅清空业务数据，保留确认状态
+export function clearBusinessDataOnly(): void {
+  const keysToRemove = [
+    'cameras',
+    'orders',
+    'showOrderModal',
+    'activeTab',
+    // 对应的备份
+    'cameras_backup',
+    'orders_backup'
+  ];
+  
+  keysToRemove.forEach(key => {
+    try {
+      localStorage.removeItem(key);
+      console.log(`Removed business data key: ${key}`);
+    } catch (error) {
+      console.error(`Failed to remove business data key "${key}":`, error);
+    }
+  });
+  
+  console.log('Business data cleared, confirmation states preserved');
+}
+
+// 新增：数据完整性检查和修复
+export function checkAndRepairData(): {
+  repaired: boolean;
+  issues: string[];
+} {
+  const issues: string[] = [];
+  let repaired = false;
+  
+  // 检查关键数据的完整性
+  const criticalKeys = ['confirmedPickups', 'confirmedReturns'];
+  
+  criticalKeys.forEach(key => {
+    try {
+      const mainData = localStorage.getItem(key);
+      const backupKey = `${key}_backup`;
+      const backupData = localStorage.getItem(backupKey);
+      
+      if (!mainData && backupData) {
+        // 主数据丢失，从备份恢复
+        const backup = JSON.parse(backupData);
+        if (backup.data) {
+          localStorage.setItem(key, JSON.stringify(backup.data));
+          issues.push(`Restored ${key} from backup`);
+          repaired = true;
+        }
+      } else if (mainData && !backupData) {
+        // 备份丢失，重新创建
+        const backupData = {
+          data: JSON.parse(mainData),
+          timestamp: Date.now(),
+          version: '1.0'
+        };
+        localStorage.setItem(backupKey, JSON.stringify(backupData));
+        issues.push(`Recreated backup for ${key}`);
+        repaired = true;
+      }
+    } catch (error) {
+      issues.push(`Error checking ${key}: ${error}`);
+    }
+  });
+  
+  return { repaired, issues };
 }
 
 // 获取本地存储使用情况
