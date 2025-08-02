@@ -131,7 +131,7 @@ function stopPeriodicSave() {
 
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   // 启动定期保存
-  React.useEffect(() => {
+  useEffect(() => {
     startPeriodicSave();
     return () => {
       // 组件卸载时不停止定期保存，因为其他组件可能还在使用
