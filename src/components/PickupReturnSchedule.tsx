@@ -22,6 +22,8 @@ export function PickupReturnSchedule({
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showPendingPickups, setShowPendingPickups] = useState(false);
   const [showPendingReturns, setShowPendingReturns] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   // 获取当前日期
   const today = new Date().toISOString().split('T')[0];
@@ -57,6 +59,15 @@ export function PickupReturnSchedule({
   };
 
   const handleReturnConfirm = (orderId: string) => {
+    // 检查是否已经确认取机
+    if (!confirmedPickups.includes(orderId)) {
+      setAlertMessage('请先确认取机后再确认还机！');
+      setShowAlert(true);
+      // 3秒后自动关闭提示
+      setTimeout(() => setShowAlert(false), 3000);
+      return;
+    }
+
     // 确保状态更新能正确触发
     if (confirmedReturns.includes(orderId)) {
       // 如果已确认，则取消确认
@@ -246,15 +257,21 @@ export function PickupReturnSchedule({
                   <button
                     onClick={() => handleReturnConfirm(order.id)}
                     className={`flex items-center focus:ring-2 rounded transition-all duration-200 p-1 ${
+                      !confirmedPickups.includes(order.id)
+                        ? 'text-gray-400 cursor-not-allowed opacity-50'
                       confirmedReturns.includes(order.id)
                         ? 'text-blue-700 bg-blue-50 hover:bg-blue-100 focus:ring-blue-300'
                         : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 focus:ring-blue-200'
                     }`}
+                    disabled={!confirmedPickups.includes(order.id)}
+                    title={!confirmedPickups.includes(order.id) ? '请先确认取机' : ''}
                   >
                     {confirmedReturns.includes(order.id) ? (
                       <CheckCircle2 className="h-5 w-5 mr-1 fill-current text-blue-600" />
                     ) : (
-                      <Circle className="h-5 w-5 mr-1 text-blue-600" />
+                      <Circle className={`h-5 w-5 mr-1 ${
+                        !confirmedPickups.includes(order.id) ? 'text-gray-400' : 'text-blue-600'
+                      }`} />
                     )}
                     <span className="text-sm font-medium">
                       {confirmedReturns.includes(order.id) ? '已确认还机' : '确认还机'}
@@ -306,6 +323,27 @@ export function PickupReturnSchedule({
           </div>
         </div>
       </div>
+
+      {/* 提示弹窗 */}
+      {showAlert && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full shadow-2xl">
+            <div className="p-6 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+                <AlertCircle className="h-6 w-6 text-yellow-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">操作提示</h3>
+              <p className="text-sm text-gray-600 mb-4">{alertMessage}</p>
+              <button
+                onClick={() => setShowAlert(false)}
+                className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 focus:ring-4 focus:ring-yellow-200 transition-all duration-200 font-medium"
+              >
+                我知道了
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
