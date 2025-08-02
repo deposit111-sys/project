@@ -46,11 +46,25 @@ export function PickupReturnSchedule({
   };
 
   const handlePickupConfirm = (orderId: string) => {
-    onConfirmPickup(orderId);
+    // 确保状态更新能正确触发
+    if (confirmedPickups.includes(orderId)) {
+      // 如果已确认，则取消确认
+      onConfirmPickup(orderId);
+    } else {
+      // 如果未确认，则确认
+      onConfirmPickup(orderId);
+    }
   };
 
   const handleReturnConfirm = (orderId: string) => {
-    onConfirmReturn(orderId);
+    // 确保状态更新能正确触发
+    if (confirmedReturns.includes(orderId)) {
+      // 如果已确认，则取消确认
+      onConfirmReturn(orderId);
+    } else {
+      // 如果未确认，则确认
+      onConfirmReturn(orderId);
+    }
   };
 
   return (
@@ -179,14 +193,20 @@ export function PickupReturnSchedule({
                   </div>
                   <button
                     onClick={() => handlePickupConfirm(order.id)}
-                    className="flex items-center text-green-600 hover:text-green-700 focus:ring-2 focus:ring-green-200 rounded transition-all duration-200 p-1"
+                    className={`flex items-center focus:ring-2 rounded transition-all duration-200 p-1 ${
+                      confirmedPickups.includes(order.id)
+                        ? 'text-green-700 bg-green-50 hover:bg-green-100 focus:ring-green-300'
+                        : 'text-green-600 hover:text-green-700 hover:bg-green-50 focus:ring-green-200'
+                    }`}
                   >
                     {confirmedPickups.includes(order.id) ? (
-                      <CheckCircle2 className="h-5 w-5 mr-1 fill-current" />
+                      <CheckCircle2 className="h-5 w-5 mr-1 fill-current text-green-600" />
                     ) : (
-                      <Circle className="h-5 w-5 mr-1" />
+                      <Circle className="h-5 w-5 mr-1 text-green-600" />
                     )}
-                    <span className="text-sm font-medium">确认取机</span>
+                    <span className="text-sm font-medium">
+                      {confirmedPickups.includes(order.id) ? '已确认取机' : '确认取机'}
+                    </span>
                   </button>
                 </div>
                 <div className="text-sm space-y-1">
@@ -225,14 +245,20 @@ export function PickupReturnSchedule({
                   </div>
                   <button
                     onClick={() => handleReturnConfirm(order.id)}
-                    className="flex items-center text-blue-600 hover:text-blue-700 focus:ring-2 focus:ring-blue-200 rounded transition-all duration-200 p-1"
+                    className={`flex items-center focus:ring-2 rounded transition-all duration-200 p-1 ${
+                      confirmedReturns.includes(order.id)
+                        ? 'text-blue-700 bg-blue-50 hover:bg-blue-100 focus:ring-blue-300'
+                        : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 focus:ring-blue-200'
+                    }`}
                   >
                     {confirmedReturns.includes(order.id) ? (
-                      <CheckCircle2 className="h-5 w-5 mr-1 fill-current" />
+                      <CheckCircle2 className="h-5 w-5 mr-1 fill-current text-blue-600" />
                     ) : (
-                      <Circle className="h-5 w-5 mr-1" />
+                      <Circle className="h-5 w-5 mr-1 text-blue-600" />
                     )}
-                    <span className="text-sm font-medium">确认还机</span>
+                    <span className="text-sm font-medium">
+                      {confirmedReturns.includes(order.id) ? '已确认还机' : '确认还机'}
+                    </span>
                   </button>
                 </div>
                 <div className="text-sm space-y-1">

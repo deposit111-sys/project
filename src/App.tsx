@@ -75,21 +75,23 @@ function App() {
   };
   const handleConfirmPickup = (orderId: string) => {
     setConfirmedPickups(prev => {
-      if (prev.includes(orderId)) {
-        return prev.filter(id => id !== orderId);
-      } else {
-        return [...prev, orderId];
-      }
+      const newState = prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId];
+      
+      // 强制触发重新渲染
+      return [...newState];
     });
   };
 
   const handleConfirmReturn = (orderId: string) => {
     setConfirmedReturns(prev => {
-      if (prev.includes(orderId)) {
-        return prev.filter(id => id !== orderId);
-      } else {
-        return [...prev, orderId];
-      }
+      const newState = prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId];
+      
+      // 强制触发重新渲染
+      return [...newState];
     });
   };
 
