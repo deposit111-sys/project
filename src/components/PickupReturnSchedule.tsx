@@ -48,14 +48,9 @@ export function PickupReturnSchedule({
   };
 
   const handlePickupConfirm = (orderId: string) => {
-    // 确保状态更新能正确触发
-    if (confirmedPickups.includes(orderId)) {
-      // 如果已确认，则取消确认
-      onConfirmPickup(orderId);
-    } else {
-      // 如果未确认，则确认
-      onConfirmPickup(orderId);
-    }
+    console.log('PickupReturnSchedule: handlePickupConfirm called for orderId:', orderId);
+    console.log('Current confirmedPickups:', confirmedPickups);
+    onConfirmPickup(orderId);
   };
 
   const handleReturnConfirm = (orderId: string) => {
@@ -68,14 +63,9 @@ export function PickupReturnSchedule({
       return;
     }
 
-    // 确保状态更新能正确触发
-    if (confirmedReturns.includes(orderId)) {
-      // 如果已确认，则取消确认
-      onConfirmReturn(orderId);
-    } else {
-      // 如果未确认，则确认
-      onConfirmReturn(orderId);
-    }
+    console.log('PickupReturnSchedule: handleReturnConfirm called for orderId:', orderId);
+    console.log('Current confirmedReturns:', confirmedReturns);
+    onConfirmReturn(orderId);
   };
 
   return (

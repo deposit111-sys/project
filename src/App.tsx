@@ -74,27 +74,31 @@ function App() {
     setConfirmedReturns([]);
   };
   const handleConfirmPickup = (orderId: string) => {
-    setConfirmedPickups(prev => {
-      const isCurrentlyConfirmed = prev.includes(orderId);
-      const newState = isCurrentlyConfirmed
-        ? prev.filter(id => id !== orderId)
-        : [...prev, orderId];
-      
-      console.log('Pickup confirmation updated:', { orderId, isCurrentlyConfirmed, newState });
-      return [...newState];
-    });
+    const isCurrentlyConfirmed = confirmedPickups.includes(orderId);
+    let newState: string[];
+    
+    if (isCurrentlyConfirmed) {
+      newState = confirmedPickups.filter(id => id !== orderId);
+    } else {
+      newState = [...confirmedPickups, orderId];
+    }
+    
+    console.log('Pickup confirmation updated:', { orderId, isCurrentlyConfirmed, newState });
+    setConfirmedPickups(newState);
   };
 
   const handleConfirmReturn = (orderId: string) => {
-    setConfirmedReturns(prev => {
-      const isCurrentlyConfirmed = prev.includes(orderId);
-      const newState = isCurrentlyConfirmed
-        ? prev.filter(id => id !== orderId)
-        : [...prev, orderId];
-      
-      console.log('Return confirmation updated:', { orderId, isCurrentlyConfirmed, newState });
-      return [...newState];
-    });
+    const isCurrentlyConfirmed = confirmedReturns.includes(orderId);
+    let newState: string[];
+    
+    if (isCurrentlyConfirmed) {
+      newState = confirmedReturns.filter(id => id !== orderId);
+    } else {
+      newState = [...confirmedReturns, orderId];
+    }
+    
+    console.log('Return confirmation updated:', { orderId, isCurrentlyConfirmed, newState });
+    setConfirmedReturns(newState);
   };
 
   const handleExportExcel = () => {

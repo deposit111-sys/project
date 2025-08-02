@@ -5,7 +5,13 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     try {
       const item = window.localStorage.getItem(key);
       console.log(`Loading from localStorage [${key}]:`, item);
-      return item && item !== "undefined" ? JSON.parse(item) : initialValue;
+      if (item === null || item === "undefined") {
+        console.log(`No data found for key [${key}], using initial value:`, initialValue);
+        return initialValue;
+      }
+      const parsed = JSON.parse(item);
+      console.log(`Parsed data for key [${key}]:`, parsed);
+      return parsed;
     } catch (error) {
       console.error(`Error reading localStorage key "${key}":`, error);
       return initialValue;
@@ -14,9 +20,10 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
 
   const setValue = (value: T) => {
     try {
-      setStoredValue(value);
       console.log(`Saving to localStorage [${key}]:`, value);
+      setStoredValue(value);
       window.localStorage.setItem(key, JSON.stringify(value));
+      console.log(`Successfully saved to localStorage [${key}]`);
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);
     }
