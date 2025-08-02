@@ -46,23 +46,6 @@ function createBackup<T>(key: string, value: T): void {
   }
 }
 
-// 生成简单的校验和
-function generateChecksum<T>(data: T): string {
-  const str = JSON.stringify(data);
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return hash.toString();
-}
-
-// 验证数据完整性
-function verifyDataIntegrity<T>(data: T, checksum: string): boolean {
-  return generateChecksum(data) === checksum;
-}
-
 // 从备份恢复
 function restoreFromBackup<T>(key: string, initialValue: T): T {
   try {
