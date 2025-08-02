@@ -72,7 +72,16 @@ export function clearAllLocalData(): void {
     'cameras_backup',
     'orders_backup',
     'confirmedPickups_backup',
-    'confirmedReturns_backup'
+    'confirmedReturns_backup',
+    'showOrderModal_backup',
+    'activeTab_backup',
+    // 二级备份键
+    'cameras_backup2',
+    'orders_backup2',
+    'confirmedPickups_backup2',
+    'confirmedReturns_backup2',
+    'showOrderModal_backup2',
+    'activeTab_backup2'
   ];
   
   keysToRemove.forEach(key => {
@@ -94,7 +103,14 @@ export function clearBusinessDataOnly(): void {
     'activeTab',
     // 对应的备份
     'cameras_backup',
-    'orders_backup'
+    'orders_backup',
+    'showOrderModal_backup',
+    'activeTab_backup',
+    // 二级备份
+    'cameras_backup2',
+    'orders_backup2',
+    'showOrderModal_backup2',
+    'activeTab_backup2'
   ];
   
   keysToRemove.forEach(key => {
@@ -118,32 +134,73 @@ export function checkAndRepairData(): {
   let repaired = false;
   
   // 检查关键数据的完整性
-  const criticalKeys = ['confirmedPickups', 'confirmedReturns'];
+  const criticalKeys = ['confirmedPickups', 'confirmedReturns', 'cameras', 'orders', 'showOrderModal', 'activeTab'];
   
   criticalKeys.forEach(key => {
     try {
       const mainData = localStorage.getItem(key);
       const backupKey = `${key}_backup`;
       const backupData = localStorage.getItem(backupKey);
+      const secondaryBackupKey = `${key}_backup2`;
+      const secondaryBackupData = localStorage.getItem(secondaryBackupKey);
       
-      if (!mainData && backupData) {
+      if (!mainData && (backupData || secondaryBackupData)) {
         // 主数据丢失，从备份恢复
-        const backup = JSON.parse(backupData);
-        if (backup.data) {
-          localStorage.setItem(key, JSON.stringify(backup.data));
-          issues.push(`Restored ${key} from backup`);
-          repaired = true;
+        let restored = false;
+        
+        // 优先从主备份恢复
+        if (backupData) {
+          try {
+            const backup = JSON.parse(backupData);
+            if (backup.data) {
+              localStorage.setItem(key, JSON.stringify(backup.data));
+              issues.push(`Restored ${key} from primary backup`);
+              repaired = true;
+              restored = true;
+            }
+          } catch (error) {
+            console.error(`Failed to restore from primary backup for ${key}:`, error);
+          }
         }
-      } else if (mainData && !backupData) {
+        
+        // 如果主备份失败，尝试从二级备份恢复
+        if (!restored && secondaryBackupData) {
+          try {
+            const secondaryBackup = JSON.parse(secondaryBackupData);
+            if (secondaryBackup.data) {
+              localStorage.setItem(key, JSON.stringify(secondaryBackup.data));
+              issues.push(`Restored ${key} from secondary backup`);
+              repaired = true;
+            }
+          } catch (error) {
+            console.error(`Failed to restore from secondary backup for ${key}:`, error);
+          }
+        }
+      } else if (mainData && (!backupData || !secondaryBackupData)) {
         // 备份丢失，重新创建
-        const backupData = {
-          data: JSON.parse(mainData),
-          timestamp: Date.now(),
-          version: '1.0'
-        };
-        localStorage.setItem(backupKey, JSON.stringify(backupData));
-        issues.push(`Recreated backup for ${key}`);
-        repaired = true;
+        try {
+          const parsedMainData = JSON.parse(mainData);
+          const backupData = {
+            data: parsedMainData,
+            timestamp: Date.now(),
+            version: '1.0'
+          };
+          
+          if (!backupData) {
+            localStorage.setItem(backupKey, JSON.stringify(backupData));
+            issues.push(`Recreated primary backup for ${key}`);
+            repaired = true;
+          }
+          
+          if (!secondaryBackupData) {
+            localStorage.setItem(secondaryBackupKey, JSON.stringify(backupData));
+            issues.push(`Recreated secondary backup for ${key}`);
+            repaired = true;
+          }
+        } catch (error) {
+          console.error(`Failed to recreate backup for ${key}:`, error);
+          issues.push(`Failed to recreate backup for ${key}: ${error}`);
+        }
       }
     } catch (error) {
       issues.push(`Error checking ${key}: ${error}`);
@@ -153,6 +210,70 @@ export function checkAndRepairData(): {
   return { repaired, issues };
 }
 
+// 新增：全面数据完整性检查
+export function performComprehensiveDataCheck(): {
+  status: 'healthy' | 'warning' | 'critical';
+  details: {
+    mainStorage: { [key: string]: boolean };
+    primaryBackups: { [key: string]: boolean };
+    secondaryBackups: { [key: string]: boolean };
+  };
+  recommendations: string[];
+} {
+  const criticalKeys = ['confirmedPickups', 'confirmedReturns', 'cameras', 'orders'];
+  const details = {
+    mainStorage: {} as { [key: string]: boolean },
+    primaryBackups: {} as { [key: string]: boolean },
+    secondaryBackups: {} as { [key: string]: boolean }
+  };
+  const recommendations: string[] = [];
+  
+  let healthyCount = 0;
+  let totalChecks = 0;
+  
+  criticalKeys.forEach(key => {
+    // 检查主存储
+    const mainData = localStorage.getItem(key);
+    details.mainStorage[key] = !!mainData;
+    if (mainData) healthyCount++;
+    totalChecks++;
+    
+    // 检查主备份
+    const primaryBackup = localStorage.getItem(`${key}_backup`);
+    details.primaryBackups[key] = !!primaryBackup;
+    if (primaryBackup) healthyCount++;
+    totalChecks++;
+    
+    // 检查二级备份
+    const secondaryBackup = localStorage.getItem(`${key}_backup2`);
+    details.secondaryBackups[key] = !!secondaryBackup;
+    if (secondaryBackup) healthyCount++;
+    totalChecks++;
+    
+    // 生成建议
+    if (!mainData && !primaryBackup && !secondaryBackup) {
+      recommendations.push(`${key}: 所有数据丢失，建议重新初始化`);
+    } else if (!mainData) {
+      recommendations.push(`${key}: 主数据丢失，建议从备份恢复`);
+    } else if (!primaryBackup || !secondaryBackup) {
+      recommendations.push(`${key}: 备份不完整，建议重新创建备份`);
+    }
+  });
+  
+  const healthPercentage = (healthyCount / totalChecks) * 100;
+  let status: 'healthy' | 'warning' | 'critical';
+  
+  if (healthPercentage >= 90) {
+    status = 'healthy';
+  } else if (healthPercentage >= 60) {
+    status = 'warning';
+  } else {
+    status = 'critical';
+  }
+  
+  return { status, details, recommendations };
+}
+
 // 获取本地存储使用情况
 export function getStorageInfo(): {
   used: number;
@@ -160,13 +281,31 @@ export function getStorageInfo(): {
   percentage: number;
   camerasSize: number;
   ordersSize: number;
+  backupSize: number;
 } {
   const cameras = localStorage.getItem('cameras') || '[]';
   const orders = localStorage.getItem('orders') || '[]';
+  const confirmedPickups = localStorage.getItem('confirmedPickups') || '[]';
+  const confirmedReturns = localStorage.getItem('confirmedReturns') || '[]';
+  
+  // 计算备份大小
+  let backupSize = 0;
+  const backupKeys = [
+    'cameras_backup', 'orders_backup', 'confirmedPickups_backup', 'confirmedReturns_backup',
+    'cameras_backup2', 'orders_backup2', 'confirmedPickups_backup2', 'confirmedReturns_backup2'
+  ];
+  
+  backupKeys.forEach(key => {
+    const data = localStorage.getItem(key);
+    if (data) {
+      backupSize += new Blob([data]).size;
+    }
+  });
   
   const camerasSize = new Blob([cameras]).size;
   const ordersSize = new Blob([orders]).size;
-  const used = camerasSize + ordersSize;
+  const confirmationSize = new Blob([confirmedPickups + confirmedReturns]).size;
+  const used = camerasSize + ordersSize + confirmationSize + backupSize;
   
   // localStorage 通常限制为 5-10MB，这里假设 5MB
   const total = 5 * 1024 * 1024;
@@ -178,6 +317,7 @@ export function getStorageInfo(): {
     percentage,
     camerasSize,
     ordersSize
+    backupSize
   };
 }
 

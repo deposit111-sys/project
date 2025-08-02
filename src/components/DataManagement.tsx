@@ -6,6 +6,7 @@ import {
   clearAllLocalData, 
   clearBusinessDataOnly,
   checkAndRepairData,
+  performComprehensiveDataCheck,
   getStorageInfo, 
   formatFileSize,
   SystemData 
@@ -18,7 +19,9 @@ import {
   AlertTriangle, 
   CheckCircle,
   FileText,
-  Database
+  Database,
+  Shield,
+  Activity
 } from 'lucide-react';
 
 interface DataManagementProps {
@@ -111,6 +114,27 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
     }
   };
 
+  const handleHealthCheck = () => {
+    const result = performComprehensiveDataCheck();
+    setHealthStatus({
+      status: result.status,
+      lastCheck: new Date().toLocaleString('zh-CN')
+    });
+    
+    const statusMessages = {
+      healthy: '数据健康状况良好！所有数据和备份都完整。',
+      warning: '数据健康状况一般，发现一些备份缺失，建议进行修复。',
+      critical: '数据健康状况严重，发现重要数据丢失，请立即进行修复！'
+    };
+    
+    setImportStatus({
+      type: result.status === 'healthy' ? 'success' : 'error',
+      message: statusMessages[result.status] + (result.recommendations.length > 0 ? '\n建议：' + result.recommendations.join('; ') : '')
+    });
+    
+    setTimeout(() => setImportStatus({ type: null, message: '' }), 8000);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
@@ -118,16 +142,62 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
           <Database className="h-5 w-5 mr-2" />
           数据管理
         </h2>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-        >
-          {isExpanded ? '收起' : '展开'}
-        </button>
+        <div className="flex items-center space-x-3">
+          {healthStatus && (
+            <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+              healthStatus.status === 'healthy' 
+                ? 'bg-green-100 text-green-800'
+                : healthStatus.status === 'warning'
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-red-100 text-red-800'
+            }`}>
+              <Shield className="h-3 w-3 mr-1" />
+              {healthStatus.status === 'healthy' ? '健康' : healthStatus.status === 'warning' ? '警告' : '严重'}
+            </div>
+          )}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            {isExpanded ? '收起' : '展开'}
+          </button>
+        </div>
       </div>
 
       {isExpanded && (
         <div className="space-y-6">
+          {/* 数据健康状态 */}
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center">
+                <Activity className="h-4 w-4 mr-2 text-blue-600" />
+                <span className="font-medium text-blue-800">数据健康监控</span>
+              </div>
+              <button
+                onClick={handleHealthCheck}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                立即检查
+              </button>
+            </div>
+            {healthStatus && (
+              <div className="text-sm text-blue-700">
+                <div className="flex items-center justify-between">
+                  <span>上次检查：{healthStatus.lastCheck}</span>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    healthStatus.status === 'healthy' 
+                      ? 'bg-green-100 text-green-800'
+                      : healthStatus.status === 'warning'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {healthStatus.status === 'healthy' ? '数据健康' : healthStatus.status === 'warning' ? '需要注意' : '需要修复'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* 存储信息 */}
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center mb-3">
@@ -142,6 +212,10 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
               <div className="flex justify-between">
                 <span>订单数据：</span>
                 <span>{formatFileSize(storageInfo.ordersSize)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>备份数据：</span>
+                <span>{formatFileSize(storageInfo.backupSize)}</span>
               </div>
               <div className="flex justify-between font-medium">
                 <span>总计：</span>
@@ -192,6 +266,7 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
             <button
               onClick={() => {
                 const result = checkAndRepairData();
+                handleHealthCheck(); // 修复后重新检查健康状态
                 setImportStatus({
                   type: result.repaired ? 'success' : 'error',
                   message: result.repaired 
@@ -272,10 +347,13 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
               <div className="text-sm text-yellow-800">
                 <div className="font-medium mb-1">数据管理说明：</div>
                 <ul className="space-y-1 text-xs">
-                  <li>• 所有数据自动保存在浏览器本地存储中</li>
-                  <li>• 定期导出数据备份，防止数据丢失</li>
+                  <li>• 所有数据自动保存在浏览器本地存储中，具有多重备份保护</li>
+                  <li>• 系统自动创建主备份和二级备份，确保数据安全</li>
+                  <li>• 每5秒自动进行定期保存，防止数据丢失</li>
+                  <li>• 定期导出数据备份到文件，作为额外保护</li>
                   <li>• 导入数据会替换当前所有数据</li>
                   <li>• 清空数据操作无法撤销，请谨慎操作</li>
+                  <li>• 建议定期进行数据健康检查，确保数据完整性</li>
                 </ul>
               </div>
             </div>

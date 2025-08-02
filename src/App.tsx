@@ -12,6 +12,7 @@ import { PickupReturnSchedule } from './components/PickupReturnSchedule';
 import { PendingOrdersOverview } from './components/PendingOrdersOverview';
 import { DataManagement } from './components/DataManagement';
 import { checkAndRepairData } from './utils/dataUtils';
+import { performComprehensiveDataCheck } from './utils/dataUtils';
 import { exportToExcel } from './utils/exportUtils';
 
 function App() {
