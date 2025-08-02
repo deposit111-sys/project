@@ -75,22 +75,24 @@ function App() {
   };
   const handleConfirmPickup = (orderId: string) => {
     setConfirmedPickups(prev => {
-      const newState = prev.includes(orderId) 
+      const isCurrentlyConfirmed = prev.includes(orderId);
+      const newState = isCurrentlyConfirmed
         ? prev.filter(id => id !== orderId)
         : [...prev, orderId];
       
-      // 强制触发重新渲染
+      console.log('Pickup confirmation updated:', { orderId, isCurrentlyConfirmed, newState });
       return [...newState];
     });
   };
 
   const handleConfirmReturn = (orderId: string) => {
     setConfirmedReturns(prev => {
-      const newState = prev.includes(orderId) 
+      const isCurrentlyConfirmed = prev.includes(orderId);
+      const newState = isCurrentlyConfirmed
         ? prev.filter(id => id !== orderId)
         : [...prev, orderId];
       
-      // 强制触发重新渲染
+      console.log('Return confirmation updated:', { orderId, isCurrentlyConfirmed, newState });
       return [...newState];
     });
   };

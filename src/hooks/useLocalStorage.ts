@@ -4,6 +4,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
       const item = window.localStorage.getItem(key);
+      console.log(`Loading from localStorage [${key}]:`, item);
       return item && item !== "undefined" ? JSON.parse(item) : initialValue;
     } catch (error) {
       console.error(`Error reading localStorage key "${key}":`, error);
@@ -14,6 +15,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
   const setValue = (value: T) => {
     try {
       setStoredValue(value);
+      console.log(`Saving to localStorage [${key}]:`, value);
       window.localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);

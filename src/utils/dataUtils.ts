@@ -62,6 +62,8 @@ export function importSystemData(file: File): Promise<SystemData> {
 export function clearAllLocalData(): void {
   localStorage.removeItem('cameras');
   localStorage.removeItem('orders');
+  localStorage.removeItem('confirmedPickups');
+  localStorage.removeItem('confirmedReturns');
   localStorage.removeItem('showOrderModal');
   localStorage.removeItem('activeTab');
 }
