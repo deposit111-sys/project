@@ -259,7 +259,7 @@ export function PickupReturnSchedule({
                     className={`flex items-center focus:ring-2 rounded transition-all duration-200 p-1 ${
                       !confirmedPickups.includes(order.id)
                         ? 'text-gray-400 cursor-not-allowed opacity-50'
-                      confirmedReturns.includes(order.id)
+                      : confirmedReturns.includes(order.id)
                         ? 'text-blue-700 bg-blue-50 hover:bg-blue-100 focus:ring-blue-300'
                         : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 focus:ring-blue-200'
                     }`}
