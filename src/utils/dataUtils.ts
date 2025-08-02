@@ -180,26 +180,27 @@ export function checkAndRepairData(): {
         // 备份丢失，重新创建
         try {
           const parsedMainData = JSON.parse(mainData);
-          const backupData = {
+          const backupDataObj = {
             data: parsedMainData,
             timestamp: Date.now(),
             version: '1.0'
           };
           
           if (!backupData) {
-            localStorage.setItem(backupKey, JSON.stringify(backupData));
+            localStorage.setItem(backupKey, JSON.stringify(backupDataObj));
             issues.push(`Recreated primary backup for ${key}`);
             repaired = true;
           }
           
           if (!secondaryBackupData) {
-            localStorage.setItem(secondaryBackupKey, JSON.stringify(backupData));
+            localStorage.setItem(secondaryBackupKey, JSON.stringify(backupDataObj));
             issues.push(`Recreated secondary backup for ${key}`);
             repaired = true;
           }
         } catch (error) {
           console.error(`Failed to recreate backup for ${key}:`, error);
-          issues.push(`Failed to recreate backup for ${key}: ${error}`);
+          issues.push(`Failed to recreate backup for ${key}: corrupted main data`);
+          // Skip recreating backups for corrupted data
         }
       }
     } catch (error) {
