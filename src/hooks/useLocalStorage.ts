@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { generateChecksum, verifyDataIntegrity } from '../utils/dataUtils';
 
 // 备份键名映射
 const BACKUP_KEYS = {
