@@ -1,6 +1,13 @@
 // 生成简单的校验和
 function generateChecksum<T>(data: T): string {
-  const str = JSON.stringify(data);
+  let str: string;
+  try {
+    const result = JSON.stringify(data);
+    str = result ?? 'null';
+  } catch (error) {
+    console.warn('Failed to stringify data for checksum:', error);
+    str = 'null';
+  }
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);

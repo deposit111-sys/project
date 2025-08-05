@@ -167,12 +167,13 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
       
       // 验证保存是否成功
       const verification = window.localStorage.getItem(key);
-      if (verification !== serializedValue) {
+      const normalizedSerializedValue = serializedValue === undefined ? 'undefined' : serializedValue;
+      if (verification !== normalizedSerializedValue) {
         console.error(`Verification failed for key "${key}". Attempting recovery...`);
         // 尝试重新保存
         setTimeout(() => {
           try {
-            window.localStorage.setItem(key, serializedValue);
+            window.localStorage.setItem(key, normalizedSerializedValue);
             createBackup(key, value);
             console.log(`Recovery save attempted for key [${key}]`);
           } catch (recoveryError) {
@@ -183,7 +184,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
         // 再次尝试保存
         setTimeout(() => {
           try {
-            window.localStorage.setItem(key, serializedValue);
+            window.localStorage.setItem(key, normalizedSerializedValue);
             createBackup(key, value);
             console.log(`Second recovery save attempted for key [${key}]`);
           } catch (recoveryError) {
