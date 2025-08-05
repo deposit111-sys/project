@@ -41,6 +41,39 @@ export function PickupReturnSchedule({
   const pendingPickupOrders = pickupOrders.filter(order => !confirmedPickups.includes(order.id));
   const pendingReturnOrders = returnOrders.filter(order => !confirmedReturns.includes(order.id));
 
+  // 时间段排序函数
+  const sortOrdersByTime = (orders: RentalOrder[], timeType: 'pickup' | 'return') => {
+    const timeOrder = { morning: 1, afternoon: 2, evening: 3 };
+    
+    return [...orders].sort((a, b) => {
+      const timeA = timeType === 'pickup' ? a.pickupTime : a.returnTime;
+      const timeB = timeType === 'pickup' ? b.pickupTime : b.returnTime;
+      
+      const orderA = timeOrder[timeA as keyof typeof timeOrder];
+      const orderB = timeOrder[timeB as keyof typeof timeOrder];
+      
+      // 首先按时间段排序
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+      
+      // 时间段相同时，按相机型号排序
+      const modelCompare = a.cameraModel.localeCompare(b.cameraModel);
+      if (modelCompare !== 0) {
+        return modelCompare;
+      }
+      
+      // 型号相同时，按编号排序
+      return a.cameraSerialNumber.localeCompare(b.cameraSerialNumber);
+    });
+  };
+
+  // 对订单进行排序
+  const sortedPickupOrders = sortOrdersByTime(pickupOrders, 'pickup');
+  const sortedReturnOrders = sortOrdersByTime(returnOrders, 'return');
+  const sortedPendingPickupOrders = sortOrdersByTime(pendingPickupOrders, 'pickup');
+  const sortedPendingReturnOrders = sortOrdersByTime(pendingReturnOrders, 'return');
+
   const timeMap = {
     morning: '上午',
     afternoon: '下午',
@@ -108,7 +141,7 @@ export function PickupReturnSchedule({
               </div>
               {showPendingPickups && (
                 <div className="space-y-2">
-                  {pendingPickupOrders.map(order => (
+                  {sortedPendingPickupOrders.map(order => (
                     <div key={order.id} className="bg-white p-3 rounded border border-orange-100">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -152,7 +185,7 @@ export function PickupReturnSchedule({
               </div>
               {showPendingReturns && (
                 <div className="space-y-2">
-                  {pendingReturnOrders.map(order => (
+                  {sortedPendingReturnOrders.map(order => (
                     <div key={order.id} className="bg-white p-3 rounded border border-red-100">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -185,7 +218,7 @@ export function PickupReturnSchedule({
             </span>
           </div>
           <div className="space-y-3">
-            {pickupOrders.map(order => (
+            {sortedPickupOrders.map(order => (
               <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -220,7 +253,7 @@ export function PickupReturnSchedule({
                 </div>
               </div>
             ))}
-            {pickupOrders.length === 0 && (
+            {sortedPickupOrders.length === 0 && (
               <div className="text-center py-8">
                 <div className="text-gray-400 text-lg mb-2">📅</div>
                 <p className="text-gray-500">今日无取机安排</p>
@@ -237,7 +270,7 @@ export function PickupReturnSchedule({
             </span>
           </div>
           <div className="space-y-3">
-            {returnOrders.map(order => (
+            {sortedReturnOrders.map(order => (
               <div key={order.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -278,7 +311,7 @@ export function PickupReturnSchedule({
                 </div>
               </div>
             ))}
-            {returnOrders.length === 0 && (
+            {sortedReturnOrders.length === 0 && (
               <div className="text-center py-8">
                 <div className="text-gray-400 text-lg mb-2">📅</div>
                 <p className="text-gray-500">今日无还机安排</p>
