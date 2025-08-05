@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RentalOrder } from '../types';
 import { formatDate } from '../utils/dateUtils';
-import { Calendar, CheckCircle2, Circle, AlertCircle, Package, PackageX } from 'lucide-react';
+import { Calendar, CheckCircle2, Circle, AlertCircle, Package, PackageX, Search, Filter } from 'lucide-react';
 import { DatePicker } from './DatePicker';
 
 interface PickupReturnScheduleProps {
@@ -24,14 +24,45 @@ export function PickupReturnSchedule({
   const [showPendingReturns, setShowPendingReturns] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [showUnconfirmedOnly, setShowUnconfirmedOnly] = useState(false);</parameter>
 
   // 获取当前日期
   const today = new Date().toISOString().split('T')[0];
   const getOrdersForDate = (date: string, type: 'pickup' | 'return') => {
-    return orders.filter(order => {
+    let filteredOrders = orders.filter(order => {
       const orderDate = type === 'pickup' ? order.pickupDate : order.returnDate;
       return orderDate === date;
     });
+
+    // 关键词搜索
+    if (searchKeyword.trim()) {
+      const keyword = searchKeyword.toLowerCase().trim();
+      filteredOrders = filteredOrders.filter(order => {
+        const searchFields = [
+          order.cameraModel,
+          order.cameraSerialNumber,
+          order.renterName,
+          order.customerService,
+          order.salesperson,
+          order.depositStatus,
+          order.notes
+        ].join(' ').toLowerCase();
+        
+        return searchFields.includes(keyword);
+      });
+    }
+
+    // 筛选未确认的订单
+    if (showUnconfirmedOnly) {
+      if (type === 'pickup') {
+        filteredOrders = filteredOrders.filter(order => !confirmedPickups.includes(order.id));
+      } else {
+        filteredOrders = filteredOrders.filter(order => !confirmedReturns.includes(order.id));
+      }
+    }
+
+    return filteredOrders;
   };
 
   const pickupOrders = getOrdersForDate(selectedDate, 'pickup');
@@ -103,17 +134,76 @@ export function PickupReturnSchedule({
 
   return (
     <div>
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-          <Calendar className="h-4 w-4 mr-1" />
-          选择日期
-        </label>
-        <DatePicker
-          value={selectedDate}
-          onChange={(date) => setSelectedDate(date)}
-          placeholder="选择查看日期"
-          className="min-w-[180px]"
-        />
+      {/* 搜索和筛选区域 */}
+      <div className="mb-6 space-y-4">
+        <div className="flex flex-wrap gap-4 items-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <Calendar className="h-4 w-4 mr-1" />
+              选择日期
+            </label>
+            <DatePicker
+              value={selectedDate}
+              onChange={(date) => setSelectedDate(date)}
+              placeholder="选择查看日期"
+              className="min-w-[180px]"
+            />
+          </div>
+          
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <Search className="h-4 w-4 mr-1" />
+              关键词搜索
+            </label>
+            <input
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="输入相机型号、租借人、销售人员等关键词..."
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+              <Filter className="h-4 w-4 mr-1" />
+              筛选选项
+            </label>
+            <label className="flex items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showUnconfirmedOnly}
+                onChange={(e) => setShowUnconfirmedOnly(e.target.checked)}
+                className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="text-sm">仅显示未确认</span>
+            </label>
+          </div>
+        </div>
+        
+        {/* 清空筛选 */}
+        {(searchKeyword || showUnconfirmedOnly) && (
+          <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center text-blue-700 text-sm">
+              <Filter className="h-4 w-4 mr-2" />
+              <span>
+                当前筛选: 
+                {searchKeyword && <span className="ml-1 font-medium">关键词"{searchKeyword}"</span>}
+                {searchKeyword && showUnconfirmedOnly && <span className="mx-1">+</span>}
+                {showUnconfirmedOnly && <span className="ml-1 font-medium">仅未确认</span>}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setSearchKeyword('');
+                setShowUnconfirmedOnly(false);
+              }}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              清空筛选
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 未取未还统计卡片 */}
@@ -213,9 +303,16 @@ export function PickupReturnSchedule({
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-800">取机安排</h3>
-            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-              {pickupOrders.length}个
-            </span>
+            <div className="flex items-center space-x-2">
+              {(searchKeyword || showUnconfirmedOnly) && (
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  筛选后
+                </span>
+              )}
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                {pickupOrders.length}个
+              </span>
+            </div>
           </div>
           <div className="space-y-3">
             {sortedPickupOrders.map(order => (
@@ -256,7 +353,20 @@ export function PickupReturnSchedule({
             {sortedPickupOrders.length === 0 && (
               <div className="text-center py-8">
                 <div className="text-gray-400 text-lg mb-2">📅</div>
-                <p className="text-gray-500">今日无取机安排</p>
+                <p className="text-gray-500">
+                  {(searchKeyword || showUnconfirmedOnly) ? '未找到匹配的取机安排' : '今日无取机安排'}
+                </p>
+                {(searchKeyword || showUnconfirmedOnly) && (
+                  <button
+                    onClick={() => {
+                      setSearchKeyword('');
+                      setShowUnconfirmedOnly(false);
+                    }}
+                    className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    清空筛选条件
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -265,9 +375,16 @@ export function PickupReturnSchedule({
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-800">还机安排</h3>
-            <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
-              {returnOrders.length}个
-            </span>
+            <div className="flex items-center space-x-2">
+              {(searchKeyword || showUnconfirmedOnly) && (
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  筛选后
+                </span>
+              )}
+              <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
+                {returnOrders.length}个
+              </span>
+            </div>
           </div>
           <div className="space-y-3">
             {sortedReturnOrders.map(order => (
@@ -314,7 +431,20 @@ export function PickupReturnSchedule({
             {sortedReturnOrders.length === 0 && (
               <div className="text-center py-8">
                 <div className="text-gray-400 text-lg mb-2">📅</div>
-                <p className="text-gray-500">今日无还机安排</p>
+                <p className="text-gray-500">
+                  {(searchKeyword || showUnconfirmedOnly) ? '未找到匹配的还机安排' : '今日无还机安排'}
+                </p>
+                {(searchKeyword || showUnconfirmedOnly) && (
+                  <button
+                    onClick={() => {
+                      setSearchKeyword('');
+                      setShowUnconfirmedOnly(false);
+                    }}
+                    className="mt-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    清空筛选条件
+                  </button>
+                )}
               </div>
             )}
           </div>
