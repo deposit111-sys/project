@@ -24,12 +24,18 @@ export const supabase = isSupabaseConfigured
       },
       global: {
         fetch: (url, options = {}) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000);
+          
           return fetch(url, {
             ...options,
-            signal: AbortSignal.timeout(30000) // 30秒超时
+            signal: controller.signal
           }).catch(error => {
-            console.log('Supabase fetch error:', error);
+            clearTimeout(timeoutId);
+            console.log('Supabase fetch error:', error.name, error.message);
             throw error;
+          }).finally(() => {
+            clearTimeout(timeoutId);
           });
         }
       }

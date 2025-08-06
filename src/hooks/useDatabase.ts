@@ -32,16 +32,20 @@ export function useDatabase() {
       console.log('Loading data from Supabase...');
 
       // 添加超时保护
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('数据加载超时，请检查网络连接')), 20000)
+      );
+
+      const dataPromise = Promise.all([
+        CameraService.getAll(),
+        OrderService.getAll(),
+        ConfirmationService.getAll()
+      ]);
+
       const [camerasData, ordersData, confirmationsData] = await Promise.race([
-        Promise.all([
-          CameraService.getAll(),
-          OrderService.getAll(),
-          ConfirmationService.getAll()
-        ]),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('数据加载超时，请检查网络连接')), 20000)
-        )
-      ]) as [Camera[], RentalOrder[], { confirmedPickups: string[]; confirmedReturns: string[] }];
+        dataPromise,
+        timeoutPromise
+      ]);
 
       console.log('Data loaded successfully:', {
         cameras: camerasData.length,
@@ -58,23 +62,26 @@ export function useDatabase() {
       let errorMessage = '加载数据失败';
       
       if (err instanceof Error) {
-        if (err.message.includes('Failed to fetch') || err.message.includes('fetch')) {
+        if (err.message.includes('Failed to fetch') || err.message.includes('fetch') || err.message.includes('NetworkError')) {
           errorMessage = '无法连接到数据库，请检查网络连接或稍后重试';
         } else if (err.message.includes('timeout') || err.message.includes('超时')) {
           errorMessage = '数据加载超时，请检查网络连接';
+        } else if (err.message.includes('signal timed out')) {
+          errorMessage = '网络请求超时，请检查网络连接或稍后重试';
         } else {
           errorMessage = err.message;
         }
       }
       
-      console.error('Setting error message:', errorMessage);
+      console.log('Setting error message:', errorMessage);
       setError(errorMessage);
       
       // 如果是网络错误或超时，设置空数据以便应用继续工作
       if (err instanceof Error && (
         err.message.includes('Failed to fetch') || 
         err.message.includes('timeout') ||
-        err.message.includes('超时')
+        err.message.includes('超时') ||
+        err.message.includes('signal timed out')
       )) {
         console.log('Network error detected, falling back to empty data');
         setCameras([]);
