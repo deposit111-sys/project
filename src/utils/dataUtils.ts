@@ -133,6 +133,190 @@ export function clearAllLocalData(): void {
   });
 }
 
+// 尝试从所有可能的备份源恢复数据
+export function attemptFullDataRecovery(): {
+  recovered: boolean;
+  data: {
+    cameras: any[];
+    orders: any[];
+    confirmedPickups: string[];
+    confirmedReturns: string[];
+  };
+  source: string;
+} {
+  const result = {
+    recovered: false,
+    data: {
+      cameras: [],
+      orders: [],
+      confirmedPickups: [],
+      confirmedReturns: []
+    },
+    source: ''
+  };
+
+  // 尝试从各种可能的备份源恢复
+  const backupSources = [
+    // 主备份
+    'cameras_backup',
+    'orders_backup', 
+    'confirmedPickups_backup',
+    'confirmedReturns_backup',
+    // 二级备份
+    'cameras_backup2',
+    'orders_backup2',
+    'confirmedPickups_backup2', 
+    'confirmedReturns_backup2',
+    // 可能的其他备份键名
+    'cameras_bak',
+    'orders_bak',
+    'camera_data',
+    'order_data',
+    'rental_cameras',
+    'rental_orders'
+  ];
+
+  let recoveredAny = false;
+
+  // 尝试恢复相机数据
+  for (const key of backupSources) {
+    if (key.includes('camera')) {
+      try {
+        const data = localStorage.getItem(key);
+        if (data && data !== 'null' && data !== 'undefined') {
+          const parsed = JSON.parse(data);
+          let cameraData = parsed;
+          
+          // 如果是备份格式，提取data字段
+          if (parsed.data && Array.isArray(parsed.data)) {
+            cameraData = parsed.data;
+          }
+          
+          if (Array.isArray(cameraData) && cameraData.length > 0) {
+            result.data.cameras = cameraData;
+            result.source += `相机数据从 ${key} 恢复; `;
+            recoveredAny = true;
+            break;
+          }
+        }
+      } catch (error) {
+        console.log(`Failed to recover from ${key}:`, error);
+      }
+    }
+  }
+
+  // 尝试恢复订单数据
+  for (const key of backupSources) {
+    if (key.includes('order')) {
+      try {
+        const data = localStorage.getItem(key);
+        if (data && data !== 'null' && data !== 'undefined') {
+          const parsed = JSON.parse(data);
+          let orderData = parsed;
+          
+          // 如果是备份格式，提取data字段
+          if (parsed.data && Array.isArray(parsed.data)) {
+            orderData = parsed.data;
+          }
+          
+          if (Array.isArray(orderData) && orderData.length > 0) {
+            result.data.orders = orderData;
+            result.source += `订单数据从 ${key} 恢复; `;
+            recoveredAny = true;
+            break;
+          }
+        }
+      } catch (error) {
+        console.log(`Failed to recover from ${key}:`, error);
+      }
+    }
+  }
+
+  // 尝试恢复确认状态
+  for (const key of backupSources) {
+    if (key.includes('confirmedPickups') || key.includes('pickup')) {
+      try {
+        const data = localStorage.getItem(key);
+        if (data && data !== 'null' && data !== 'undefined') {
+          const parsed = JSON.parse(data);
+          let pickupData = parsed;
+          
+          if (parsed.data && Array.isArray(parsed.data)) {
+            pickupData = parsed.data;
+          }
+          
+          if (Array.isArray(pickupData)) {
+            result.data.confirmedPickups = pickupData;
+            result.source += `取机确认从 ${key} 恢复; `;
+            recoveredAny = true;
+            break;
+          }
+        }
+      } catch (error) {
+        console.log(`Failed to recover pickups from ${key}:`, error);
+      }
+    }
+  }
+
+  for (const key of backupSources) {
+    if (key.includes('confirmedReturns') || key.includes('return')) {
+      try {
+        const data = localStorage.getItem(key);
+        if (data && data !== 'null' && data !== 'undefined') {
+          const parsed = JSON.parse(data);
+          let returnData = parsed;
+          
+          if (parsed.data && Array.isArray(parsed.data)) {
+            returnData = parsed.data;
+          }
+          
+          if (Array.isArray(returnData)) {
+            result.data.confirmedReturns = returnData;
+            result.source += `还机确认从 ${key} 恢复; `;
+            recoveredAny = true;
+            break;
+          }
+        }
+      } catch (error) {
+        console.log(`Failed to recover returns from ${key}:`, error);
+      }
+    }
+  }
+
+  result.recovered = recoveredAny;
+  return result;
+}
+
+// 扫描所有localStorage键，寻找可能的数据
+export function scanAllLocalStorageKeys(): {
+  possibleDataKeys: string[];
+  allKeys: string[];
+} {
+  const allKeys: string[] = [];
+  const possibleDataKeys: string[] = [];
+  
+  // 遍历所有localStorage键
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key) {
+      allKeys.push(key);
+      
+      // 检查是否可能包含相机或订单数据
+      if (key.toLowerCase().includes('camera') || 
+          key.toLowerCase().includes('order') || 
+          key.toLowerCase().includes('rental') ||
+          key.toLowerCase().includes('confirmed') ||
+          key.toLowerCase().includes('pickup') ||
+          key.toLowerCase().includes('return') ||
+          key.includes('backup')) {
+        possibleDataKeys.push(key);
+      }
+    }
+  }
+  
+  return { possibleDataKeys, allKeys };
+}
+
 // 新增：仅清空业务数据，保留确认状态
 export function clearBusinessDataOnly(): void {
   const keysToRemove = [

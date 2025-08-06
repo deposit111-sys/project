@@ -21,7 +21,8 @@ import {
   FileText,
   Database,
   Shield,
-  Activity
+  Activity,
+  Search
 } from 'lucide-react';
 
 interface DataManagementProps {
@@ -315,6 +316,75 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
 
             <button
               onClick={() => {
+                const { attemptFullDataRecovery } = require('../utils/dataUtils');
+                const recovery = attemptFullDataRecovery();
+                
+                if (recovery.recovered) {
+                  // 恢复数据到主存储
+                  if (recovery.data.cameras.length > 0) {
+                    localStorage.setItem('cameras', JSON.stringify(recovery.data.cameras));
+                  }
+                  if (recovery.data.orders.length > 0) {
+                    localStorage.setItem('orders', JSON.stringify(recovery.data.orders));
+                  }
+                  if (recovery.data.confirmedPickups.length > 0) {
+                    localStorage.setItem('confirmedPickups', JSON.stringify(recovery.data.confirmedPickups));
+                  }
+                  if (recovery.data.confirmedReturns.length > 0) {
+                    localStorage.setItem('confirmedReturns', JSON.stringify(recovery.data.confirmedReturns));
+                  }
+                  
+                  onImportData(recovery.data.cameras, recovery.data.orders);
+                  setImportStatus({
+                    type: 'success',
+                    message: `深度恢复成功！${recovery.source}找到 ${recovery.data.cameras.length} 台相机，${recovery.data.orders.length} 个订单`
+                  });
+                  
+                  // 刷新页面以重新加载数据
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 2000);
+                } else {
+                  setImportStatus({
+                    type: 'error',
+                    message: '深度扫描未找到任何可恢复的数据。请检查是否有手动导出的备份文件。'
+                  });
+                }
+                setTimeout(() => setImportStatus({ type: null, message: '' }), 8000);
+              }}
+              className="w-full flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+            >
+              <HardDrive className="h-4 w-4 mr-2" />
+              深度数据恢复
+            </button>
+
+            <button
+              onClick={() => {
+                const { scanAllLocalStorageKeys } = require('../utils/dataUtils');
+                const scan = scanAllLocalStorageKeys();
+                
+                let message = `扫描完成！\n\n总共找到 ${scan.allKeys.length} 个存储键\n`;
+                if (scan.possibleDataKeys.length > 0) {
+                  message += `可能包含数据的键：\n${scan.possibleDataKeys.join('\n')}\n\n`;
+                  message += '请尝试"深度数据恢复"功能';
+                } else {
+                  message += '未找到可能包含相机或订单数据的键';
+                }
+                
+                setImportStatus({
+                  type: scan.possibleDataKeys.length > 0 ? 'success' : 'error',
+                  message
+                });
+                setTimeout(() => setImportStatus({ type: null, message: '' }), 10000);
+              }}
+              className="w-full flex items-center justify-center px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+            >
+              <Search className="h-4 w-4 mr-2" />
+              扫描本地存储
+            </button>
+
+            <button
+              onClick={() => {
                 if (window.confirm(
                   '确定要清空业务数据吗？\n\n' +
                   '此操作将清空相机和订单数据，但会保留确认状态。\n\n' +
@@ -399,10 +469,11 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
               <div className="text-sm text-red-800">
                 <div className="font-medium mb-1">数据丢失恢复指南：</div>
                 <ol className="space-y-1 text-xs list-decimal list-inside">
-                  <li><strong>第一步：</strong>点击"紧急数据恢复"按钮，系统会自动从备份恢复数据</li>
-                  <li><strong>第二步：</strong>如果自动恢复失败，点击"导入数据备份"导入之前的备份文件</li>
-                  <li><strong>第三步：</strong>恢复后点击"数据健康监控"检查数据完整性</li>
-                  <li><strong>预防措施：</strong>定期点击"导出数据备份"保存到本地文件</li>
+                  <li><strong>第一步：</strong>点击"扫描本地存储"查看是否有残留的数据</li>
+                  <li><strong>第二步：</strong>点击"深度数据恢复"尝试从所有可能的备份源恢复</li>
+                  <li><strong>第三步：</strong>如果仍然失败，点击"紧急数据恢复"从标准备份恢复</li>
+                  <li><strong>第四步：</strong>最后尝试"导入数据备份"导入手动备份文件</li>
+                  <li><strong>预防措施：</strong>定期导出数据备份到本地文件作为最后保障</li>
                 </ol>
               </div>
             </div>
