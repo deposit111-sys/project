@@ -139,6 +139,26 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
     setTimeout(() => setImportStatus({ type: null, message: '' }), 8000);
   };
 
+  const handleDataRecovery = () => {
+    const result = checkAndRepairData();
+    if (result.repaired) {
+      setImportStatus({
+        type: 'success',
+        message: `数据恢复成功！已从备份恢复：${result.issues.join(', ')}`
+      });
+      // 刷新页面以重新加载恢复的数据
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } else {
+      setImportStatus({
+        type: 'error',
+        message: '未找到可恢复的备份数据，请尝试导入之前的数据备份文件'
+      });
+    }
+    setTimeout(() => setImportStatus({ type: null, message: '' }), 8000);
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-4">
@@ -286,6 +306,14 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
             </button>
 
             <button
+              onClick={handleDataRecovery}
+              className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:ring-4 focus:ring-purple-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              紧急数据恢复
+            </button>
+
+            <button
               onClick={() => {
                 if (window.confirm(
                   '确定要清空业务数据吗？\n\n' +
@@ -358,7 +386,24 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
                   <li>• 导入数据会替换当前所有数据</li>
                   <li>• 清空数据操作无法撤销，请谨慎操作</li>
                   <li>• 建议定期进行数据健康检查，确保数据完整性</li>
+                  <li>• <strong>数据丢失时，请先点击"紧急数据恢复"尝试从备份恢复</strong></li>
                 </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* 数据恢复指南 */}
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start">
+              <AlertTriangle className="h-4 w-4 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-red-800">
+                <div className="font-medium mb-1">数据丢失恢复指南：</div>
+                <ol className="space-y-1 text-xs list-decimal list-inside">
+                  <li><strong>第一步：</strong>点击"紧急数据恢复"按钮，系统会自动从备份恢复数据</li>
+                  <li><strong>第二步：</strong>如果自动恢复失败，点击"导入数据备份"导入之前的备份文件</li>
+                  <li><strong>第三步：</strong>恢复后点击"数据健康监控"检查数据完整性</li>
+                  <li><strong>预防措施：</strong>定期点击"导出数据备份"保存到本地文件</li>
+                </ol>
               </div>
             </div>
           </div>
