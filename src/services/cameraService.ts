@@ -4,12 +4,12 @@ import { Camera } from '../types';
 export class CameraService {
   // 获取所有相机
   static async getAll(): Promise<Camera[]> {
-    if (!isSupabaseEnabled || !supabase) {
-      console.log('Supabase not configured, returning empty cameras');
-      return [];
-    }
-
     try {
+      if (!isSupabaseEnabled || !supabase) {
+        console.log('Supabase not configured, returning empty cameras');
+        return [];
+      }
+
       console.log('Fetching cameras from Supabase...');
       const { data, error } = await supabase
         .from(TABLES.CAMERAS)
@@ -23,6 +23,15 @@ export class CameraService {
       return data?.map(transformDatabaseCamera) || [];
     } catch (error) {
       console.error('Error fetching cameras:', error);
+      // 如果是网络错误，返回空数据而不是抛出错误
+      if (error instanceof Error && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('fetch') ||
+        error.message.includes('NetworkError')
+      )) {
+        console.log('Network error, returning empty cameras');
+        return [];
+      }
       throw new Error('获取相机列表失败');
     }
   }
