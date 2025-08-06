@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle } from 'lucide-react';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { useDatabase } from './hooks/useDatabase';
+import { useLocalDatabase } from './hooks/useLocalDatabase';
+import { initializeLocalDB } from './lib/indexedDB';
 import { Camera as CameraType, RentalOrder } from './types';
-import { checkAndRepairData } from './utils/dataUtils';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
 import { AddOrderForm } from './components/AddOrderForm';
@@ -14,77 +13,62 @@ import { ScheduleSearch } from './components/ScheduleSearch';
 import { PickupReturnSchedule } from './components/PickupReturnSchedule';
 import { PendingOrdersOverview } from './components/PendingOrdersOverview';
 import { DataManagement } from './components/DataManagement';
-import { DatabaseStatus } from './components/DatabaseStatus';
-import { DataSyncManager } from './components/DataSyncManager';
 
 function App() {
-  // 本地存储 hooks（作为备份）
-  const [cameras, setCameras] = useLocalStorage<CameraType[]>('cameras', []);
-  const [orders, setOrders] = useLocalStorage<RentalOrder[]>('orders', []);
-  const [confirmedPickups, setConfirmedPickups] = useLocalStorage<string[]>('confirmedPickups', []);
-  const [confirmedReturns, setConfirmedReturns] = useLocalStorage<string[]>('confirmedReturns', []);
+  // 本地数据库 hooks
+  const {
+    cameras,
+    orders,
+    confirmedPickups,
+    confirmedReturns,
+    loading,
+    error,
+    addCamera,
+    deleteCamera,
+    addOrder,
+    updateOrder,
+    deleteOrder,
+    confirmPickup,
+    confirmReturn,
+    exportData,
+    importData,
+    clearAllData,
+    getStats,
+    clearError
+  } = useLocalDatabase();
   
   // UI 状态
-  const [showOrderModal, setShowOrderModal] = useLocalStorage<boolean>('showOrderModal', false);
-  const [activeTab, setActiveTab] = useLocalStorage<string>('activeTab', 'calendar');
-  const [databaseConnected, setDatabaseConnected] = useState(false);
-  
-  // 数据库 hooks
-  const {
-    cameras: dbCameras,
-    orders: dbOrders,
-    confirmedPickups: dbConfirmedPickups,
-    confirmedReturns: dbConfirmedReturns,
-    loading: dbLoading,
-    error: dbError,
-    addCamera: dbAddCamera,
-    deleteCamera: dbDeleteCamera,
-    addOrder: dbAddOrder,
-    updateOrder: dbUpdateOrder,
-    deleteOrder: dbDeleteOrder,
-    confirmPickup: dbConfirmPickup,
-    confirmReturn: dbConfirmReturn,
-    clearError: dbClearError,
-    loadData: dbLoadData
-  } = useDatabase();
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('calendar');
+  const [dbInitialized, setDbInitialized] = useState(false);
 
-  // 应用启动时检查和修复数据
+  // 应用启动时初始化本地数据库
   React.useEffect(() => {
-    const result = checkAndRepairData();
-    if (result.repaired) {
-      console.log('Data repair completed on startup:', result.issues);
-      // 如果有数据修复，显示通知
-      setTimeout(() => {
-        console.log('数据完整性检查完成，已自动修复发现的问题');
-      }, 1000);
-    }
-    
-    // 定期进行数据完整性检查（每30分钟）
-    const integrityCheckInterval = setInterval(() => {
-      const checkResult = checkAndRepairData();
-      if (checkResult.repaired) {
-        console.log('Scheduled data integrity check completed:', checkResult.issues);
+    const initDB = async () => {
+      try {
+        console.log('🚀 初始化本地数据库...');
+        await initializeLocalDB();
+        setDbInitialized(true);
+        console.log('✅ 本地数据库初始化完成');
+      } catch (error) {
+        console.error('❌ 本地数据库初始化失败:', error);
       }
-    }, 30 * 60 * 1000); // 30分钟
-    
-    return () => clearInterval(integrityCheckInterval);
+    };
+
+    initDB();
   }, []);
 
-  // 根据数据库连接状态决定使用哪套数据
-  // 优先使用本地存储数据，只有在本地数据为空且数据库有数据时才使用数据库数据
-  const currentCameras = cameras.length > 0 ? cameras : (databaseConnected ? dbCameras : cameras);
-  const currentOrders = orders.length > 0 ? orders : (databaseConnected ? dbOrders : orders);
-  const currentConfirmedPickups = confirmedPickups.length > 0 ? confirmedPickups : (databaseConnected ? dbConfirmedPickups : confirmedPickups);
-  const currentConfirmedReturns = confirmedReturns.length > 0 ? confirmedReturns : (databaseConnected ? dbConfirmedReturns : confirmedReturns);
-
-  // 当数据库连接状态改变时，重新加载数据
-  // 注释掉自动加载数据库数据的逻辑，优先使用本地数据
-  // React.useEffect(() => {
-  //   if (databaseConnected) {
-  //     console.log('Database connected, reloading data...');
-  //     dbLoadData();
-  //   }
-  // }, [databaseConnected, dbLoadData]);
+  // 显示当前数据统计
+  React.useEffect(() => {
+    if (dbInitialized) {
+      console.log('📊 当前本地数据库统计:', {
+        cameras: cameras.length,
+        orders: orders.length,
+        confirmedPickups: confirmedPickups.length,
+        confirmedReturns: confirmedReturns.length
+      });
+    }
+  }, [dbInitialized, cameras.length, orders.length, confirmedPickups.length, confirmedReturns.length]);
 
   const handleSwitchToCalendar = (model: string, date: string) => {
     // 切换到日历标签页
@@ -92,165 +76,13 @@ function App() {
     // 这里可以添加更多逻辑，比如设置日历的当前日期和筛选条件
     // 由于当前日历组件没有暴露这些控制接口，我们先实现基本的切换功能
   };
-  
-  const addCamera = async (camera: Omit<CameraType, 'id'>) => {
-    // 优先写入本地存储
-    const newCamera = {
-      ...camera,
-      id: Date.now().toString()
-    };
-    setCameras([...cameras, newCamera]);
-    
-    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
-    if (databaseConnected) {
-      try {
-        await dbAddCamera(camera);
-        console.log('Camera synced to database successfully');
-      } catch (error) {
-        console.warn('Failed to sync camera to database:', error);
-        // 不抛出错误，因为本地存储已经成功
-      }
-    }
-  };
 
-  const deleteCamera = async (id: string) => {
-    // 优先从本地存储删除
-    setCameras(cameras.filter(camera => camera.id !== id));
-    
-    // 如果数据库连接，尝试从数据库删除（但不影响本地操作）
-    if (databaseConnected) {
-      try {
-        await dbDeleteCamera(id);
-        console.log('Camera deleted from database successfully');
-      } catch (error) {
-        console.warn('Failed to delete camera from database:', error);
-        // 不抛出错误，因为本地存储已经成功
-      }
-    }
-  };
-
-  const addOrder = async (order: Omit<RentalOrder, 'id' | 'createdAt'>) => {
-    // 优先写入本地存储
-    const newOrder = {
-      ...order,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
-    setOrders([...orders, newOrder]);
-    
-    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
-    if (databaseConnected) {
-      try {
-        await dbAddOrder(order);
-        console.log('Order synced to database successfully');
-      } catch (error) {
-        console.warn('Failed to sync order to database:', error);
-        // 不抛出错误，因为本地存储已经成功
-      }
-    }
-  };
-
-  const updateOrder = async (id: string, updatedOrder: Partial<RentalOrder>) => {
-    // 优先更新本地存储
-    setOrders(prevOrders => {
-      const newOrders = prevOrders.map(order => 
-        order.id === id ? { ...order, ...updatedOrder } : order
-      );
-      return [...newOrders];
-    });
-    
-    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
-    if (databaseConnected) {
-      try {
-        await dbUpdateOrder(id, updatedOrder);
-        console.log('Order updated in database successfully');
-      } catch (error) {
-        console.warn('Failed to update order in database:', error);
-        // 不抛出错误，因为本地存储已经成功
-      }
-    }
-  };
-
-  const deleteOrder = async (id: string) => {
-    // 优先从本地存储删除
-    setOrders(prevOrders => prevOrders.filter(order => order.id !== id));
-    setConfirmedPickups(prev => prev.filter(orderId => orderId !== id));
-    setConfirmedReturns(prev => prev.filter(orderId => orderId !== id));
-    
-    // 如果数据库连接，尝试从数据库删除（但不影响本地操作）
-    if (databaseConnected) {
-      try {
-        await dbDeleteOrder(id);
-        console.log('Order deleted from database successfully');
-      } catch (error) {
-        console.warn('Failed to delete order from database:', error);
-        // 不抛出错误，因为本地存储已经成功
-      }
-    }
-  };
-
-  const handleConfirmPickup = async (orderId: string) => {
-    // 优先更新本地存储
-    const isCurrentlyConfirmed = confirmedPickups.includes(orderId);
-    const newState = isCurrentlyConfirmed 
-      ? confirmedPickups.filter(id => id !== orderId)
-      : [...confirmedPickups, orderId];
-    setConfirmedPickups(newState);
-    
-    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
-    if (databaseConnected) {
-      try {
-        await dbConfirmPickup(orderId);
-        console.log('Pickup confirmation synced to database successfully');
-      } catch (error) {
-        console.warn('Failed to sync pickup confirmation to database:', error);
-        // 不抛出错误，因为本地存储已经成功
-      }
-    }
-  };
-
-  const handleConfirmReturn = async (orderId: string) => {
-    // 优先更新本地存储
-    const isCurrentlyConfirmed = confirmedReturns.includes(orderId);
-    const newState = isCurrentlyConfirmed 
-      ? confirmedReturns.filter(id => id !== orderId)
-      : [...confirmedReturns, orderId];
-    setConfirmedReturns(newState);
-    
-    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
-    if (databaseConnected) {
-      try {
-        await dbConfirmReturn(orderId);
-        console.log('Return confirmation synced to database successfully');
-      } catch (error) {
-        console.warn('Failed to sync return confirmation to database:', error);
-        // 不抛出错误，因为本地存储已经成功
-      }
-    }
-  };
-
-  const handleImportData = (importedCameras: CameraType[], importedOrders: RentalOrder[]) => {
-    setCameras(importedCameras);
-    setOrders(importedOrders);
-    // 清空确认状态，因为导入了新数据
-    setConfirmedPickups([]);
-    setConfirmedReturns([]);
+  const handleImportData = async (importedCameras: CameraType[], importedOrders: RentalOrder[]) => {
+    await importData(importedCameras, importedOrders);
   };
 
   const handleExportExcel = () => {
-    exportToExcel(currentOrders, currentConfirmedPickups, currentConfirmedReturns);
-  };
-  
-  const handleSyncComplete = (
-    syncedCameras: CameraType[], 
-    syncedOrders: RentalOrder[], 
-    syncedConfirmedPickups: string[], 
-    syncedConfirmedReturns: string[]
-  ) => {
-    setCameras(syncedCameras);
-    setOrders(syncedOrders);
-    setConfirmedPickups(syncedConfirmedPickups);
-    setConfirmedReturns(syncedConfirmedReturns);
+    exportToExcel(orders, confirmedPickups, confirmedReturns);
   };
 
   const tabs = [
@@ -260,13 +92,29 @@ function App() {
     { id: 'pending', label: '未还未取统计目录', icon: AlertCircle }
   ];
 
+  // 如果数据库未初始化，显示加载状态
+  if (!dbInitialized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">初始化本地数据库</h2>
+          <p className="text-gray-600">正在准备数据存储环境...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">相机租赁管理系统</h1>
           <div className="flex items-center space-x-4">
-            <DatabaseStatus onConnectionChange={setDatabaseConnected} />
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-green-100">
+              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm font-medium text-green-800">本地数据库</span>
+            </div>
             <button
               onClick={handleExportExcel}
               className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -277,16 +125,16 @@ function App() {
           </div>
         </div>
 
-        {/* 数据库错误提示 */}
-        {dbError && (
+        {/* 错误提示 */}
+        {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center">
               <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
               <div>
-                <div className="font-medium text-red-800">数据库操作失败</div>
-                <div className="text-sm text-red-700">{dbError}</div>
+                <div className="font-medium text-red-800">操作失败</div>
+                <div className="text-sm text-red-700">{error}</div>
                 <button
-                  onClick={dbClearError}
+                  onClick={clearError}
                   className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
                 >
                   关闭
@@ -303,13 +151,13 @@ function App() {
             <div className="grid grid-cols-2 xl:grid-cols-1 gap-4">
               <StatCard
                 title="相机总数量"
-                value={currentCameras.length}
+                value={cameras.length}
                 icon={Camera}
                 color="border-blue-500"
               />
               <StatCard
                 title="订单总数量"
-                value={currentOrders.length}
+                value={orders.length}
                 icon={Clock}
                 color="border-green-500"
               />
@@ -317,8 +165,8 @@ function App() {
 
             {/* 添加订单表单 */}
             <AddOrderForm
-              cameras={currentCameras}
-              orders={currentOrders}
+              cameras={cameras}
+              orders={orders}
               onAddOrder={addOrder}
             />
 
@@ -335,21 +183,10 @@ function App() {
 
             {/* 相机管理 */}
             <CameraManagement
-              cameras={currentCameras}
+              cameras={cameras}
               onAddCamera={addCamera}
               onDeleteCamera={deleteCamera}
             />
-
-            {/* 数据同步管理 */}
-            {databaseConnected && (
-              <DataSyncManager
-                localCameras={cameras}
-                localOrders={orders}
-                localConfirmedPickups={confirmedPickups}
-                localConfirmedReturns={confirmedReturns}
-                onSyncComplete={handleSyncComplete}
-              />
-            )}
 
             {/* 数据管理 */}
             <DataManagement
@@ -358,6 +195,9 @@ function App() {
               onAddCamera={addCamera}
               onAddOrder={addOrder}
               onImportData={handleImportData}
+              onExportData={exportData}
+              onClearData={clearAllData}
+              getStats={getStats}
             />
           </div>
 
@@ -391,33 +231,33 @@ function App() {
               <div className="p-6">
                 {activeTab === 'calendar' && (
                   <ScheduleCalendar
-                    cameras={currentCameras}
-                    orders={currentOrders}
-                    confirmedReturns={currentConfirmedReturns}
+                    cameras={cameras}
+                    orders={orders}
+                    confirmedReturns={confirmedReturns}
                   />
                 )}
                 {activeTab === 'search' && (
                   <ScheduleSearch
-                    cameras={currentCameras}
-                    orders={currentOrders}
+                    cameras={cameras}
+                    orders={orders}
                   />
                 )}
                 {activeTab === 'schedule' && (
                   <PickupReturnSchedule
-                    orders={currentOrders}
-                    confirmedPickups={currentConfirmedPickups}
-                    confirmedReturns={currentConfirmedReturns}
-                    onConfirmPickup={handleConfirmPickup}
-                    onConfirmReturn={handleConfirmReturn}
+                    orders={orders}
+                    confirmedPickups={confirmedPickups}
+                    confirmedReturns={confirmedReturns}
+                    onConfirmPickup={confirmPickup}
+                    onConfirmReturn={confirmReturn}
                   />
                 )}
                 {activeTab === 'pending' && (
                   <PendingOrdersOverview
-                    orders={currentOrders}
-                    confirmedPickups={currentConfirmedPickups}
-                    confirmedReturns={currentConfirmedReturns}
-                    onConfirmPickup={handleConfirmPickup}
-                    onConfirmReturn={handleConfirmReturn}
+                    orders={orders}
+                    confirmedPickups={confirmedPickups}
+                    confirmedReturns={confirmedReturns}
+                    onConfirmPickup={confirmPickup}
+                    onConfirmReturn={confirmReturn}
                   />
                 )}
               </div>
@@ -429,8 +269,8 @@ function App() {
         <OrderManagementModal
           isOpen={showOrderModal}
           onClose={() => setShowOrderModal(false)}
-          orders={currentOrders}
-          cameras={currentCameras}
+          orders={orders}
+          cameras={cameras}
           onUpdateOrder={updateOrder}
           onDeleteOrder={deleteOrder}
           onSwitchToCalendar={handleSwitchToCalendar}

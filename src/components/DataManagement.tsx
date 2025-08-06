@@ -35,15 +35,34 @@ interface DataManagementProps {
   orders: RentalOrder[];
   onAddCamera: (camera: Omit<Camera, 'id'>) => void;
   onAddOrder: (order: Omit<RentalOrder, 'id' | 'createdAt'>) => void;
-  onImportData: (cameras: Camera[], orders: RentalOrder[]) => void;
+  onImportData: (cameras: Camera[], orders: RentalOrder[]) => Promise<void>;
+  onExportData: () => Promise<void>;
+  onClearData: () => Promise<void>;
+  getStats: () => Promise<{
+    cameras: number;
+    orders: number;
+    confirmations: number;
+    dbSize: string;
+  }>;
 }
 
-export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImportData }: DataManagementProps) {
+export function DataManagement({ 
+  cameras, 
+  orders, 
+  onAddCamera, 
+  onAddOrder, 
+  onImportData, 
+  onExportData, 
+  onClearData, 
+  getStats 
+}: DataManagementProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCapacityTest, setShowCapacityTest] = useState(false);
-  const [healthStatus, setHealthStatus] = useState<{
-    status: 'healthy' | 'warning' | 'critical';
-    lastCheck: string;
+  const [dbStats, setDbStats] = useState<{
+    cameras: number;
+    orders: number;
+    confirmations: number;
+    dbSize: string;
   } | null>(null);
   const [importStatus, setImportStatus] = useState<{
     type: 'success' | 'error' | null;
@@ -51,11 +70,24 @@ export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImp
   }>({ type: null, message: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const storageInfo = getStorageInfo();
+  // 获取数据库统计
+  const fetchStats = async () => {
+    try {
+      const stats = await getStats();
+      setDbStats(stats);
+    } catch (error) {
+      console.error('获取数据库统计失败:', error);
+    }
+  };
+
+  // 组件加载时获取统计
+  useEffect(() => {
+    fetchStats();
+  }, [cameras.length, orders.length]);
 
   const handleExportData = () => {
     try {
-      exportSystemData(cameras, orders);
+      onExportData();
       setImportStatus({
         type: 'success',
         message: '数据导出成功！'
@@ -88,11 +120,13 @@ export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImp
         `- 订单：${data.orders.length} 个\n` +
         `- 导出时间：${new Date(data.exportDate).toLocaleString('zh-CN')}`
       )) {
-        onImportData(data.cameras, data.orders);
+        await onImportData(data.cameras, data.orders);
         setImportStatus({
           type: 'success',
           message: `数据导入成功！导入了 ${data.cameras.length} 台相机和 ${data.orders.length} 个订单`
         });
+        // 重新获取统计
+        await fetchStats();
         setTimeout(() => setImportStatus({ type: null, message: '' }), 5000);
       }
     } catch (error) {
@@ -109,99 +143,40 @@ export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImp
     }
   };
 
-  const handleClearData = () => {
+  const handleClearData = async () => {
     if (window.confirm(
-      '警告：此操作将清空所有本地数据，包括相机信息和租赁订单。\n\n' +
+      '警告：此操作将清空所有本地数据库数据，包括相机信息和租赁订单。\n\n' +
       '建议在清空前先导出数据备份。\n\n' +
       '确定要继续吗？'
     )) {
       if (window.confirm('最后确认：真的要删除所有数据吗？此操作无法撤销！')) {
-        clearAllLocalData();
-        onImportData([], []);
-        setImportStatus({
-          type: 'success',
-          message: '所有数据已清空'
-        });
-        setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
-      }
-    }
-  };
-
-  const handleHealthCheck = () => {
-    const result = performComprehensiveDataCheck();
-    setHealthStatus({
-      status: result.status,
-      lastCheck: new Date().toLocaleString('zh-CN')
-    });
-    
-    const statusMessages = {
-      healthy: '数据健康状况良好！所有数据和备份都完整。',
-      warning: '数据健康状况一般，发现一些备份缺失，建议进行修复。',
-      critical: '数据健康状况严重，发现重要数据丢失，请立即进行修复！'
-    };
-    
-    setImportStatus({
-      type: result.status === 'healthy' ? 'success' : 'error',
-      message: statusMessages[result.status] + (result.recommendations.length > 0 ? '\n建议：' + result.recommendations.join('; ') : '')
-    });
-    
-    setTimeout(() => setImportStatus({ type: null, message: '' }), 8000);
-  };
-
-  const handleDataRecovery = () => {
-    const result = checkAndRepairData();
-    if (result.repaired) {
-      setImportStatus({
-        type: 'success',
-        message: `数据恢复成功！已从备份恢复：${result.issues.join(', ')}`
-      });
-      // 刷新页面以重新加载恢复的数据
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    } else {
-      setImportStatus({
-        type: 'error',
-        message: '未找到可恢复的备份数据，请尝试导入之前的数据备份文件'
-      });
-    }
-    setTimeout(() => setImportStatus({ type: null, message: '' }), 8000);
-  };
-
+        try {
+          await onClearData();
+          setImportStatus({
+            type: 'success',
+            message: '所有数据已清空'
+          });
+          // 重新获取统计
+          await fetchStats();
+          setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
+        } catch (error) {
+          setImportStatus({
+            type: 'error',
+              <div className="font-medium mb-1">本地数据库说明：</div>
+          });
+                <li>• 使用<strong>IndexedDB本地数据库</strong>存储数据，比浏览器缓存更稳定可靠</li>
+                <li>• 数据存储在用户设备本地，不依赖网络连接</li>
+                <li>• 支持大容量数据存储，适合长期使用</li>
+                <li>• 具有完整的数据库功能：索引、事务、查询等</li>
+                <li>• 数据持久化保存，浏览器关闭重开后数据依然存在</li>
+                <li>• 定期导出数据备份文件，作为额外保护</li>
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                <li>• <strong>IndexedDB比localStorage更安全，数据不会因为清理缓存而丢失</strong></li>
           <Database className="h-5 w-5 mr-2" />
-          数据管理
+          本地数据库管理
         </h2>
         <div className="flex items-center space-x-3">
-          {healthStatus && (
-            <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              healthStatus.status === 'healthy' 
-                ? 'bg-green-100 text-green-800'
-                : healthStatus.status === 'warning'
-                ? 'bg-yellow-100 text-yellow-800'
-                : 'bg-red-100 text-red-800'
-            }`}>
-              <Shield className="h-3 w-3 mr-1" />
-              {healthStatus.status === 'healthy' ? '健康' : healthStatus.status === 'warning' ? '警告' : '严重'}
-            </div>
-          )}
-          <button
-            onClick={() => setShowCapacityTest(!showCapacityTest)}
-            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:ring-4 focus:ring-purple-200 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            <TestTube className="h-4 w-4 mr-2" />
-            容量测试
-          </button>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            {isExpanded ? '收起' : '展开'}
-          </button>
-        </div>
       </div>
 
       {showCapacityTest && (
@@ -230,71 +205,40 @@ export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImp
 
       {isExpanded && (
         <div className="space-y-6">
-          {/* 数据健康状态 */}
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center">
-                <Activity className="h-4 w-4 mr-2 text-blue-600" />
-                <span className="font-medium text-blue-800">数据健康监控</span>
-              </div>
-              <button
-                onClick={handleHealthCheck}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-              >
-                立即检查
-              </button>
-            </div>
-            {healthStatus && (
-              <div className="text-sm text-blue-700">
-                <div className="flex items-center justify-between">
-                  <span>上次检查：{healthStatus.lastCheck}</span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    healthStatus.status === 'healthy' 
-                      ? 'bg-green-100 text-green-800'
-                      : healthStatus.status === 'warning'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {healthStatus.status === 'healthy' ? '数据健康' : healthStatus.status === 'warning' ? '需要注意' : '需要修复'}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 存储信息 */}
+          {/* 数据库信息 */}
           <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center mb-3">
               <HardDrive className="h-4 w-4 mr-2 text-gray-600" />
-              <span className="font-medium text-gray-800">本地存储使用情况</span>
+              <span className="font-medium text-gray-800">本地数据库使用情况</span>
+              <button
+                onClick={fetchStats}
+                className="ml-2 text-xs text-blue-600 hover:text-blue-700 font-medium"
+              >
+                刷新
+              </button>
             </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>相机数据：</span>
-                <span>{formatFileSize(storageInfo.camerasSize)}</span>
+            {dbStats ? (
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>相机记录：</span>
+                  <span>{dbStats.cameras.toLocaleString()} 条</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>订单记录：</span>
+                  <span>{dbStats.orders.toLocaleString()} 条</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>确认记录：</span>
+                  <span>{dbStats.confirmations.toLocaleString()} 条</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>数据库大小：</span>
+                  <span>{dbStats.dbSize}</span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>订单数据：</span>
-                <span>{formatFileSize(storageInfo.ordersSize)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>备份数据：</span>
-                <span>{formatFileSize(storageInfo.backupSize)}</span>
-              </div>
-              <div className="flex justify-between font-medium">
-                <span>总计：</span>
-                <span>{formatFileSize(storageInfo.used)}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min(storageInfo.percentage, 100)}%` }}
-                ></div>
-              </div>
-              <div className="text-xs text-gray-500 text-center">
-                使用了 {storageInfo.percentage.toFixed(1)}% 的本地存储空间
-              </div>
-            </div>
+            ) : (
+              <div className="text-sm text-gray-500">正在获取数据库统计...</div>
+            )}
           </div>
 
           {/* 数据统计 */}
@@ -327,120 +271,6 @@ export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImp
               导入数据备份
             </button>
 
-            <button
-              onClick={() => {
-                const result = checkAndRepairData();
-                handleHealthCheck(); // 修复后重新检查健康状态
-                setImportStatus({
-                  type: result.repaired ? 'success' : 'error',
-                  message: result.repaired 
-                    ? `数据修复完成：${result.issues.join(', ')}` 
-                    : '数据检查完成，未发现问题'
-                });
-                setTimeout(() => setImportStatus({ type: null, message: '' }), 5000);
-              }}
-              className="w-full flex items-center justify-center px-4 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 focus:ring-4 focus:ring-yellow-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-            >
-              <HardDrive className="h-4 w-4 mr-2" />
-              检查并修复数据
-            </button>
-
-            <button
-              onClick={handleDataRecovery}
-              className="w-full flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:ring-4 focus:ring-purple-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-            >
-              <Shield className="h-4 w-4 mr-2" />
-              紧急数据恢复
-            </button>
-
-            <button
-              onClick={() => {
-                const recovery = attemptFullDataRecovery();
-                
-                if (recovery.recovered) {
-                  // 恢复数据到主存储
-                  if (recovery.data.cameras.length > 0) {
-                    localStorage.setItem('cameras', JSON.stringify(recovery.data.cameras));
-                  }
-                  if (recovery.data.orders.length > 0) {
-                    localStorage.setItem('orders', JSON.stringify(recovery.data.orders));
-                  }
-                  if (recovery.data.confirmedPickups.length > 0) {
-                    localStorage.setItem('confirmedPickups', JSON.stringify(recovery.data.confirmedPickups));
-                  }
-                  if (recovery.data.confirmedReturns.length > 0) {
-                    localStorage.setItem('confirmedReturns', JSON.stringify(recovery.data.confirmedReturns));
-                  }
-                  
-                  onImportData(recovery.data.cameras, recovery.data.orders);
-                  setImportStatus({
-                    type: 'success',
-                    message: `深度恢复成功！${recovery.source}找到 ${recovery.data.cameras.length} 台相机，${recovery.data.orders.length} 个订单`
-                  });
-                  
-                  // 刷新页面以重新加载数据
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 2000);
-                } else {
-                  setImportStatus({
-                    type: 'error',
-                    message: '深度扫描未找到任何可恢复的数据。请检查是否有手动导出的备份文件。'
-                  });
-                }
-                setTimeout(() => setImportStatus({ type: null, message: '' }), 8000);
-              }}
-              className="w-full flex items-center justify-center px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-            >
-              <HardDrive className="h-4 w-4 mr-2" />
-              深度数据恢复
-            </button>
-
-            <button
-              onClick={() => {
-                const scan = scanAllLocalStorageKeys();
-                
-                let message = `扫描完成！\n\n总共找到 ${scan.allKeys.length} 个存储键\n`;
-                if (scan.possibleDataKeys.length > 0) {
-                  message += `可能包含数据的键：\n${scan.possibleDataKeys.join('\n')}\n\n`;
-                  message += '请尝试"深度数据恢复"功能';
-                } else {
-                  message += '未找到可能包含相机或订单数据的键';
-                }
-                
-                setImportStatus({
-                  type: scan.possibleDataKeys.length > 0 ? 'success' : 'error',
-                  message
-                });
-                setTimeout(() => setImportStatus({ type: null, message: '' }), 10000);
-              }}
-              className="w-full flex items-center justify-center px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-            >
-              <Search className="h-4 w-4 mr-2" />
-              扫描本地存储
-            </button>
-
-            <button
-              onClick={() => {
-                if (window.confirm(
-                  '确定要清空业务数据吗？\n\n' +
-                  '此操作将清空相机和订单数据，但会保留确认状态。\n\n' +
-                  '建议在清空前先导出数据备份。'
-                )) {
-                  clearBusinessDataOnly();
-                  onImportData([], []);
-                  setImportStatus({
-                    type: 'success',
-                    message: '业务数据已清空，确认状态已保留'
-                  });
-                  setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
-                }
-              }}
-              className="w-full flex items-center justify-center px-4 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 focus:ring-4 focus:ring-orange-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              清空业务数据（保留确认状态）
-            </button>
             <button
               onClick={handleClearData}
               className="w-full flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md"
