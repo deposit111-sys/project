@@ -237,7 +237,18 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
       if (isSupabaseEnabled && supabase) {
         // 直接使用SQL删除测试数据，更高效
         try {
-          // 删除测试相机（相关订单会通过外键级联删除）
+          // 先删除测试订单
+          const { data: deletedOrders, error: orderDeleteError } = await supabase
+            .from('rental_orders')
+            .delete()
+            .like('camera_serial_number', 'TEST%')
+            .select();
+          
+          if (orderDeleteError) {
+            console.warn('Failed to delete test orders:', orderDeleteError);
+          }
+          
+          // 再删除测试相机
           const { data: deletedCameras, error: deleteError } = await supabase
             .from('cameras')
             .delete()
@@ -248,13 +259,32 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
             throw deleteError;
           }
           
-          deletedCount = deletedCameras?.length || 0;
+          const cameraCount = deletedCameras?.length || 0;
+          const orderCount = deletedOrders?.length || 0;
+          deletedCount = cameraCount;
           setProgress(100);
+          
+          console.log(`Deleted ${cameraCount} test cameras and ${orderCount} test orders`);
           
         } catch (dbError) {
           console.error('Database cleanup failed, trying individual deletion:', dbError);
           
-          // 如果批量删除失败，回退到逐个删除
+          // 如果批量删除失败，回退到逐个删除订单和相机
+          const allOrders = await OrderService.getAll();
+          const testOrders = allOrders.filter(order => order.cameraSerialNumber.startsWith('TEST'));
+          
+          // 先删除测试订单
+          for (let i = 0; i < testOrders.length; i++) {
+            const order = testOrders[i];
+            try {
+              await OrderService.delete(order.id);
+              setProgress((i + 1) / (testOrders.length + testCameras.length) * 100);
+            } catch (error) {
+              console.error(`Failed to delete order ${order.id}:`, error);
+            }
+          }
+          
+          // 再删除测试相机
           const allCameras = await CameraService.getAll();
           const testCameras = allCameras.filter(camera => camera.serialNumber.startsWith('TEST'));
           
@@ -263,7 +293,7 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
             try {
               await CameraService.delete(camera.id);
               deletedCount++;
-              setProgress((i + 1) / testCameras.length * 100);
+              setProgress((testOrders.length + i + 1) / (testOrders.length + testCameras.length) * 100);
             } catch (error) {
               console.error(`Failed to delete camera ${camera.id}:`, error);
             }
