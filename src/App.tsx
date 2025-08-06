@@ -3,6 +3,8 @@ import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle } 
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useDatabase } from './hooks/useDatabase';
 import { Camera as CameraType, RentalOrder } from './types';
+import { checkAndRepairData } from './utils/dataUtils';
+import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
 import { AddOrderForm } from './components/AddOrderForm';
 import { OrderManagementModal } from './components/OrderManagementModal';
@@ -14,9 +16,6 @@ import { PendingOrdersOverview } from './components/PendingOrdersOverview';
 import { DataManagement } from './components/DataManagement';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import { DataSyncManager } from './components/DataSyncManager';
-import { checkAndRepairData } from './utils/dataUtils';
-import { performComprehensiveDataCheck } from './utils/dataUtils';
-import { exportToExcel } from './utils/exportUtils';
 
 function App() {
   // 本地存储 hooks（作为备份）

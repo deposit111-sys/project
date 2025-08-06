@@ -44,6 +44,7 @@ export interface SystemData {
 
 // 导出生成校验和函数供其他模块使用
 export { generateChecksum, verifyDataIntegrity };
+
 // 导出所有系统数据
 export function exportSystemData(cameras: any[], orders: any[]): void {
   const systemData: SystemData = {

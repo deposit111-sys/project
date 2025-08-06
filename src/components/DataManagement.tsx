@@ -6,7 +6,6 @@ import {
   clearAllLocalData, 
   clearBusinessDataOnly,
   checkAndRepairData,
-  performComprehensiveDataCheck,
   getStorageInfo, 
   formatFileSize,
   SystemData 
@@ -120,6 +119,7 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
   };
 
   const handleHealthCheck = () => {
+    const { performComprehensiveDataCheck } = require('../utils/dataUtils');
     const result = performComprehensiveDataCheck();
     setHealthStatus({
       status: result.status,
