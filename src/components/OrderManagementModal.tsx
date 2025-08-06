@@ -242,7 +242,7 @@ export function OrderManagementModal({
 
             {/* 结果统计 */}
             <div className="text-sm text-gray-600">
-              显示 <span className="font-medium text-blue-600">{filteredOrders.length}</span> / {orders.length} 个订单
+              显示 <span className="font-medium text-blue-600">{filteredOrders.length.toLocaleString('zh-CN')}</span> / {orders.length.toLocaleString('zh-CN')} 个订单
             </div>
           </div>
         </div>

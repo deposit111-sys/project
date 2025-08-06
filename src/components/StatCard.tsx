@@ -14,7 +14,7 @@ export function StatCard({ title, value, icon: Icon, color }: StatCardProps) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-gray-800">{value.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-gray-800">{value.toLocaleString('zh-CN')}</p>
         </div>
         <div className={`p-3 rounded-full ${color.replace('border-', 'bg-').replace('-500', '-100')}`}>
           <Icon className={`h-8 w-8 ${color.replace('border-', 'text-')}`} />

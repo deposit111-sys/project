@@ -126,7 +126,7 @@ export function CameraManagement({ cameras, onAddCamera, onDeleteCamera }: Camer
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-lg hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 transition-all duration-200"
           >
-            <span className="font-medium">相机库存 ({cameras.length}台)</span>
+            <span className="font-medium">相机库存 ({cameras.length.toLocaleString('zh-CN')}台)</span>
             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
           
@@ -134,7 +134,7 @@ export function CameraManagement({ cameras, onAddCamera, onDeleteCamera }: Camer
             <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
               {Object.entries(groupedCameras).map(([model, cameraList]) => (
                 <div key={model} className="border rounded-lg p-3">
-                  <h3 className="font-medium text-gray-800 mb-2">{model} ({cameraList.length}台)</h3>
+                  <h3 className="font-medium text-gray-800 mb-2">{model} ({cameraList.length.toLocaleString('zh-CN')}台)</h3>
                   <div className="space-y-1">
                     {cameraList.map(camera => (
                       <div key={camera.id} className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded">

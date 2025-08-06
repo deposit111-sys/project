@@ -93,7 +93,7 @@ export function exportToExcel(
   };
   const csvContent = [
     headers.join(','),
-    ...orders.map(order => [
+    ...orders.map((order, index) => [
       order.id,
       order.cameraModel,
       order.cameraSerialNumber,

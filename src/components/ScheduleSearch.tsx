@@ -98,7 +98,7 @@ export function ScheduleSearch({ cameras, orders }: ScheduleSearchProps) {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800">搜索结果</h3>
               <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                {availableCameras.length}台可用
+                {availableCameras.length.toLocaleString('zh-CN')}台可用
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
