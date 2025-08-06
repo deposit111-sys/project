@@ -27,8 +27,7 @@ function App() {
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useLocalStorage<boolean>('showOrderModal', false);
   const [activeTab, setActiveTab] = useLocalStorage<string>('activeTab', 'calendar');
-  const [isDatabaseEnabled, setIsDatabaseEnabled] = useLocalStorage<boolean>('useDatabase', false);
-  const [databaseConnected, setDatabaseConnected] = useLocalStorage<boolean>('databaseConnected', false);
+  const [databaseConnected, setDatabaseConnected] = useState(false);
   
   // 数据库 hooks
   const {
@@ -57,10 +56,10 @@ function App() {
   }, []);
 
   // 根据数据库连接状态决定使用哪套数据
-  const currentCameras = isDatabaseEnabled && databaseConnected ? dbCameras : cameras;
-  const currentOrders = isDatabaseEnabled && databaseConnected ? dbOrders : orders;
-  const currentConfirmedPickups = isDatabaseEnabled && databaseConnected ? dbConfirmedPickups : confirmedPickups;
-  const currentConfirmedReturns = isDatabaseEnabled && databaseConnected ? dbConfirmedReturns : confirmedReturns;
+  const currentCameras = databaseConnected ? dbCameras : cameras;
+  const currentOrders = databaseConnected ? dbOrders : orders;
+  const currentConfirmedPickups = databaseConnected ? dbConfirmedPickups : confirmedPickups;
+  const currentConfirmedReturns = databaseConnected ? dbConfirmedReturns : confirmedReturns;
 
   const handleSwitchToCalendar = (model: string, date: string) => {
     // 切换到日历标签页
@@ -70,7 +69,7 @@ function App() {
   };
   
   const addCamera = async (camera: Omit<CameraType, 'id'>) => {
-    if (isDatabaseEnabled && databaseConnected) {
+    if (databaseConnected) {
       try {
         await dbAddCamera(camera);
       } catch (error) {
@@ -92,7 +91,7 @@ function App() {
   };
 
   const deleteCamera = async (id: string) => {
-    if (isDatabaseEnabled && databaseConnected) {
+    if (databaseConnected) {
       try {
         await dbDeleteCamera(id);
       } catch (error) {
@@ -106,7 +105,7 @@ function App() {
   };
 
   const addOrder = async (order: Omit<RentalOrder, 'id' | 'createdAt'>) => {
-    if (isDatabaseEnabled && databaseConnected) {
+    if (databaseConnected) {
       try {
         await dbAddOrder(order);
       } catch (error) {
@@ -130,7 +129,7 @@ function App() {
   };
 
   const updateOrder = async (id: string, updatedOrder: Partial<RentalOrder>) => {
-    if (isDatabaseEnabled && databaseConnected) {
+    if (databaseConnected) {
       try {
         await dbUpdateOrder(id, updatedOrder);
       } catch (error) {
@@ -154,7 +153,7 @@ function App() {
   };
 
   const deleteOrder = async (id: string) => {
-    if (isDatabaseEnabled && databaseConnected) {
+    if (databaseConnected) {
       try {
         await dbDeleteOrder(id);
       } catch (error) {
@@ -180,7 +179,7 @@ function App() {
   };
   
   const handleConfirmPickup = async (orderId: string) => {
-    if (isDatabaseEnabled && databaseConnected) {
+    if (databaseConnected) {
       try {
         await dbConfirmPickup(orderId);
       } catch (error) {
@@ -202,7 +201,7 @@ function App() {
   };
 
   const handleConfirmReturn = async (orderId: string) => {
-    if (isDatabaseEnabled && databaseConnected) {
+    if (databaseConnected) {
       try {
         await dbConfirmReturn(orderId);
       } catch (error) {

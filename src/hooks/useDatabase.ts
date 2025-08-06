@@ -15,8 +15,12 @@ export function useDatabase() {
 
   // 加载所有数据
   const loadData = async () => {
-    // 如果 Supabase 未配置，直接返回空数据
+    // 如果 Supabase 未配置，设置空数据并返回
     if (!isSupabaseEnabled) {
+      setCameras([]);
+      setOrders([]);
+      setConfirmedPickups([]);
+      setConfirmedReturns([]);
       setLoading(false);
       return;
     }

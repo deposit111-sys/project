@@ -12,7 +12,7 @@ export function DatabaseStatus({ onConnectionChange }: DatabaseStatusProps) {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   const checkConnection = async () => {
-    // 如果 Supabase 未配置，设置为未连接状态
+    // 如果 Supabase 未配置，直接设置为未连接状态，不显示错误
     if (!isSupabaseEnabled || !supabase) {
       setIsConnected(false);
       setLastChecked(new Date());
