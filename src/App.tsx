@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle } from 'lucide-react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useDatabase } from './hooks/useDatabase';
