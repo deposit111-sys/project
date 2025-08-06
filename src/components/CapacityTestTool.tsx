@@ -235,19 +235,38 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
       
       // 如果Supabase可用，从数据库清理
       if (isSupabaseEnabled && supabase) {
-        // 获取所有相机，找出测试数据
-        const allCameras = await CameraService.getAll();
-        const testCameras = allCameras.filter(camera => camera.serialNumber.startsWith('TEST'));
-        
-        // 删除测试相机（相关订单会通过级联删除）
-        for (let i = 0; i < testCameras.length; i++) {
-          const camera = testCameras[i];
-          try {
-            await CameraService.delete(camera.id);
-            deletedCount++;
-            setProgress((i + 1) / testCameras.length * 100);
-          } catch (error) {
-            console.error(`Failed to delete camera ${camera.id}:`, error);
+        // 直接使用SQL删除测试数据，更高效
+        try {
+          // 删除测试相机（相关订单会通过外键级联删除）
+          const { data: deletedCameras, error: deleteError } = await supabase
+            .from('cameras')
+            .delete()
+            .like('serial_number', 'TEST%')
+            .select();
+          
+          if (deleteError) {
+            throw deleteError;
+          }
+          
+          deletedCount = deletedCameras?.length || 0;
+          setProgress(100);
+          
+        } catch (dbError) {
+          console.error('Database cleanup failed, trying individual deletion:', dbError);
+          
+          // 如果批量删除失败，回退到逐个删除
+          const allCameras = await CameraService.getAll();
+          const testCameras = allCameras.filter(camera => camera.serialNumber.startsWith('TEST'));
+          
+          for (let i = 0; i < testCameras.length; i++) {
+            const camera = testCameras[i];
+            try {
+              await CameraService.delete(camera.id);
+              deletedCount++;
+              setProgress((i + 1) / testCameras.length * 100);
+            } catch (error) {
+              console.error(`Failed to delete camera ${camera.id}:`, error);
+            }
           }
         }
       } else {
@@ -275,6 +294,27 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
         localStorage.setItem('cameras', JSON.stringify(filteredCameras));
         localStorage.setItem('orders', JSON.stringify(filteredOrders));
         
+        // 同时清理确认状态中的测试数据
+        const localConfirmedPickups = JSON.parse(localStorage.getItem('confirmedPickups') || '[]');
+        const localConfirmedReturns = JSON.parse(localStorage.getItem('confirmedReturns') || '[]');
+        
+        // 获取测试订单的ID
+        const testOrderIds = localOrders
+          .filter((order: any) => testCameraIds.some(cameraId => 
+            localCameras.find((cam: any) => cam.id === cameraId && 
+              cam.model === order.cameraModel && 
+              cam.serialNumber === order.cameraSerialNumber
+            )
+          ))
+          .map((order: any) => order.id);
+        
+        // 清理确认状态
+        const filteredPickups = localConfirmedPickups.filter((id: string) => !testOrderIds.includes(id));
+        const filteredReturns = localConfirmedReturns.filter((id: string) => !testOrderIds.includes(id));
+        
+        localStorage.setItem('confirmedPickups', JSON.stringify(filteredPickups));
+        localStorage.setItem('confirmedReturns', JSON.stringify(filteredReturns));
+        
         deletedCount = localCameras.length - filteredCameras.length;
         setProgress(100);
       }
@@ -282,6 +322,11 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
       setCurrentTest('');
       setProgress(0);
       alert(`已清理 ${deletedCount} 台测试相机及其相关数据`);
+      
+      // 清理完成后刷新页面以更新显示
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       
     } catch (error) {
       alert('清理测试数据失败：' + (error instanceof Error ? error.message : '未知错误'));
