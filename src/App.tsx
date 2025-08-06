@@ -341,6 +341,8 @@ function App() {
             <DataManagement
               cameras={cameras}
               orders={orders}
+              onAddCamera={addCamera}
+              onAddOrder={addOrder}
               onImportData={handleImportData}
             />
           </div>

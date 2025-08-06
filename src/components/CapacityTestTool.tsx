@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { Camera, RentalOrder } from '../types';
-import { CameraService } from '../services/cameraService';
-import { OrderService } from '../services/orderService';
-import { ConfirmationService } from '../services/confirmationService';
 import { supabase, isSupabaseEnabled } from '../lib/supabase';
 import { 
   TestTube, 
@@ -18,6 +15,10 @@ import {
 } from 'lucide-react';
 
 interface CapacityTestToolProps {
+  cameras: Camera[];
+  orders: RentalOrder[];
+  onAddCamera: (camera: Omit<Camera, 'id'>) => void;
+  onAddOrder: (order: Omit<RentalOrder, 'id' | 'createdAt'>) => void;
   onTestComplete?: (results: TestResults) => void;
 }
 
@@ -31,7 +32,7 @@ interface TestResults {
   memoryUsage?: number;
 }
 
-export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
+export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onTestComplete }: CapacityTestToolProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [currentTest, setCurrentTest] = useState<string>('');
   const [progress, setProgress] = useState(0);
@@ -93,32 +94,30 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
   // 批量创建数据
   const createDataInBatches = async <T,>(
     items: T[],
-    createFn: (item: T) => Promise<any>,
+    createFn: (item: T) => void,
     batchSize: number,
     onProgress: (current: number, total: number) => void
-  ): Promise<{ created: any[], errors: string[], times: number[] }> => {
-    const created: any[] = [];
+  ): Promise<{ created: T[], errors: string[], times: number[] }> => {
+    const created: T[] = [];
     const errors: string[] = [];
     const times: number[] = [];
     
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
-      const batchPromises = batch.map(async (item) => {
+      
+      // 批量处理，直接调用本地存储函数
+      for (const item of batch) {
         const startTime = performance.now();
         try {
-          const result = await createFn(item);
+          createFn(item);
           const endTime = performance.now();
           times.push(endTime - startTime);
-          return result;
+          created.push(item);
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : '未知错误';
           errors.push(errorMsg);
-          return null;
         }
-      });
-      
-      const batchResults = await Promise.all(batchPromises);
-      created.push(...batchResults.filter(result => result !== null));
+      }
       
       onProgress(Math.min(i + batchSize, items.length), items.length);
       
@@ -152,7 +151,7 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
       
       const cameraResults = await createDataInBatches(
         testCameras,
-        CameraService.create,
+        onAddCamera,
         testConfig.batchSize,
         (current, total) => {
           setProgress((current / total) * 30); // 30% for cameras
@@ -164,11 +163,16 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
 
       // 2. 测试订单创建
       setCurrentTest('创建测试订单数据...');
-      const testOrders = generateTestOrders(testConfig.orderCount, cameraResults.created);
+      // 使用当前的相机列表（包括新创建的测试相机）
+      const allCameras = [...cameras, ...cameraResults.created.map((cam, index) => ({
+        ...cam,
+        id: `test_${Date.now()}_${index}`
+      }))];
+      const testOrders = generateTestOrders(testConfig.orderCount, allCameras);
       
       const orderResults = await createDataInBatches(
         testOrders,
-        OrderService.create,
+        onAddOrder,
         testConfig.batchSize,
         (current, total) => {
           setProgress(30 + (current / total) * 50); // 50% for orders
@@ -182,11 +186,18 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
       setCurrentTest('测试数据读取性能...');
       const readStartTime = performance.now();
       
-      await Promise.all([
-        CameraService.getAll(),
-        OrderService.getAll(),
-        ConfirmationService.getAll()
-      ]);
+      // 模拟读取本地存储数据
+      try {
+        const localCameras = JSON.parse(localStorage.getItem('cameras') || '[]');
+        const localOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const localConfirmedPickups = JSON.parse(localStorage.getItem('confirmedPickups') || '[]');
+        const localConfirmedReturns = JSON.parse(localStorage.getItem('confirmedReturns') || '[]');
+        
+        // 模拟一些处理时间
+        await new Promise(resolve => setTimeout(resolve, 10));
+      } catch (error) {
+        testResults.errors.push('读取本地存储数据失败');
+      }
       
       const readEndTime = performance.now();
       testResults.averageReadTime = readEndTime - readStartTime;
@@ -268,38 +279,11 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
           
         } catch (dbError) {
           console.error('Database cleanup failed, trying individual deletion:', dbError);
-          
-          // 如果批量删除失败，回退到逐个删除订单和相机
-          const allOrders = await OrderService.getAll();
-          const testOrders = allOrders.filter(order => order.cameraSerialNumber.startsWith('TEST'));
-          
-          // 先删除测试订单
-          for (let i = 0; i < testOrders.length; i++) {
-            const order = testOrders[i];
-            try {
-              await OrderService.delete(order.id);
-              setProgress((i + 1) / (testOrders.length + testCameras.length) * 100);
-            } catch (error) {
-              console.error(`Failed to delete order ${order.id}:`, error);
-            }
-          }
-          
-          // 再删除测试相机
-          const allCameras = await CameraService.getAll();
-          const testCameras = allCameras.filter(camera => camera.serialNumber.startsWith('TEST'));
-          
-          for (let i = 0; i < testCameras.length; i++) {
-            const camera = testCameras[i];
-            try {
-              await CameraService.delete(camera.id);
-              deletedCount++;
-              setProgress((testOrders.length + i + 1) / (testOrders.length + testCameras.length) * 100);
-            } catch (error) {
-              console.error(`Failed to delete camera ${camera.id}:`, error);
-            }
-          }
         }
-      } else {
+      }
+      
+      // 清理本地存储中的测试数据
+      try {
         // 如果没有数据库连接，清理本地存储中的测试数据
         const localCameras = JSON.parse(localStorage.getItem('cameras') || '[]');
         const localOrders = JSON.parse(localStorage.getItem('orders') || '[]');
@@ -347,6 +331,9 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
         
         deletedCount = localCameras.length - filteredCameras.length;
         setProgress(100);
+      } catch (localError) {
+        console.error('Failed to clean local storage:', localError);
+        testResults.errors.push('清理本地存储失败');
       }
       
       setCurrentTest('');

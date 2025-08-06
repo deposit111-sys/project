@@ -33,10 +33,12 @@ import { CapacityTestTool } from './CapacityTestTool';
 interface DataManagementProps {
   cameras: Camera[];
   orders: RentalOrder[];
+  onAddCamera: (camera: Omit<Camera, 'id'>) => void;
+  onAddOrder: (order: Omit<RentalOrder, 'id' | 'createdAt'>) => void;
   onImportData: (cameras: Camera[], orders: RentalOrder[]) => void;
 }
 
-export function DataManagement({ cameras, orders, onImportData }: DataManagementProps) {
+export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImportData }: DataManagementProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCapacityTest, setShowCapacityTest] = useState(false);
   const [healthStatus, setHealthStatus] = useState<{
@@ -215,7 +217,12 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
               </button>
             </div>
             <div className="p-6">
-              <CapacityTestTool />
+              <CapacityTestTool 
+                cameras={cameras}
+                orders={orders}
+                onAddCamera={onAddCamera}
+                onAddOrder={onAddOrder}
+              />
             </div>
           </div>
         </div>
