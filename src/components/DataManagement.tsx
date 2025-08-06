@@ -486,14 +486,16 @@ export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImp
               <div className="text-sm text-yellow-800">
                 <div className="font-medium mb-1">数据管理说明：</div>
                 <ul className="space-y-1 text-xs">
-                  <li>• 所有数据自动保存在浏览器本地存储中，具有多重备份保护</li>
-                  <li>• 系统自动创建主备份和二级备份，确保数据安全</li>
-                  <li>• 每5秒自动进行定期保存，防止数据丢失</li>
+                  <li>• 所有数据自动保存在浏览器本地存储中，具有<strong>五重备份保护</strong></li>
+                  <li>• 系统自动创建主备份、二级备份、三级备份、时间戳备份和紧急备份</li>
+                  <li>• 每2秒自动进行定期保存，页面关闭前强制保存，防止数据丢失</li>
+                  <li>• 每30分钟自动进行数据完整性检查和修复</li>
+                  <li>• 保存失败时自动重试最多5次，并创建紧急备份</li>
                   <li>• 定期导出数据备份到文件，作为额外保护</li>
                   <li>• 导入数据会替换当前所有数据</li>
                   <li>• 清空数据操作无法撤销，请谨慎操作</li>
                   <li>• 建议定期进行数据健康检查，确保数据完整性</li>
-                  <li>• <strong>数据丢失时，请先点击"紧急数据恢复"尝试从备份恢复</strong></li>
+                  <li>• <strong>数据丢失时，系统会自动从多层备份中恢复，无需手动操作</strong></li>
                 </ul>
               </div>
             </div>
@@ -506,11 +508,12 @@ export function DataManagement({ cameras, orders, onAddCamera, onAddOrder, onImp
               <div className="text-sm text-red-800">
                 <div className="font-medium mb-1">数据丢失恢复指南：</div>
                 <ol className="space-y-1 text-xs list-decimal list-inside">
+                  <li><strong>自动恢复：</strong>系统会在启动时自动检查并修复数据问题</li>
                   <li><strong>第一步：</strong>点击"扫描本地存储"查看是否有残留的数据</li>
                   <li><strong>第二步：</strong>点击"深度数据恢复"尝试从所有可能的备份源恢复</li>
                   <li><strong>第三步：</strong>如果仍然失败，点击"紧急数据恢复"从标准备份恢复</li>
                   <li><strong>第四步：</strong>最后尝试"导入数据备份"导入手动备份文件</li>
-                  <li><strong>预防措施：</strong>定期导出数据备份到本地文件作为最后保障</li>
+                  <li><strong>预防措施：</strong>系统已自动创建多层备份，建议定期导出数据文件作为额外保障</li>
                 </ol>
               </div>
             </div>
