@@ -4,17 +4,25 @@ import { RentalOrder } from '../types';
 export class OrderService {
   // 获取所有订单
   static async getAll(): Promise<RentalOrder[]> {
-    try {
-      if (!isSupabaseEnabled || !supabase) {
-        console.log('Supabase not configured, returning empty orders');
-        return [];
-      }
+    // 如果 Supabase 未启用，直接返回空数组
+    if (!isSupabaseEnabled || !supabase) {
+      console.log('Supabase not configured, returning empty orders');
+      return [];
+    }
 
+    try {
       console.log('Fetching orders from Supabase...');
-      const { data, error } = await supabase
-        .from(TABLES.RENTAL_ORDERS)
-        .select('*')
-        .order('created_at', { ascending: false });
+      
+      // 添加超时控制的 fetch 请求
+      const { data, error } = await Promise.race([
+        supabase
+          .from(TABLES.RENTAL_ORDERS)
+          .select('*')
+          .order('created_at', { ascending: false }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 10000)
+        )
+      ]);
 
       if (error) throw error;
 
@@ -23,17 +31,21 @@ export class OrderService {
     } catch (error) {
       console.error('Error fetching orders:', error);
       
-      // 如果是网络错误，返回空数组而不是抛出错误
+      // 检查是否是网络相关错误
       if (error instanceof Error && (
         error.message.includes('Failed to fetch') ||
         error.message.includes('NetworkError') ||
-        error.name === 'TypeError'
+        error.message.includes('Request timeout') ||
+        error.name === 'TypeError' ||
+        error.message.includes('fetch')
       )) {
         console.log('Network error detected, returning empty orders');
         return [];
       }
       
-      throw new Error('获取订单列表失败');
+      // 对于其他错误，也返回空数组以保持应用稳定性
+      console.log('Database error detected, returning empty orders');
+      return [];
     }
   }
 

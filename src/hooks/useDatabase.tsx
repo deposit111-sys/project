@@ -16,7 +16,7 @@ export function useDatabase() {
   // Load all data from database
   const loadData = useCallback(async () => {
     if (!isSupabaseEnabled) {
-      console.log('Supabase not enabled, skipping database load');
+      console.log('Supabase not enabled - using local storage only');
       return;
     }
 
@@ -24,11 +24,18 @@ export function useDatabase() {
     setError(null);
 
     try {
-      console.log('Loading data from database...');
-      const [camerasData, ordersData, confirmationsData] = await Promise.all([
-        CameraService.getAll(),
-        OrderService.getAll(),
-        ConfirmationService.getAll()
+      console.log('Loading data from Supabase database...');
+      
+      // 添加超时控制
+      const [camerasData, ordersData, confirmationsData] = await Promise.race([
+        Promise.all([
+          CameraService.getAll(),
+          OrderService.getAll(),
+          ConfirmationService.getAll()
+        ]),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database connection timeout')), 15000)
+        )
       ]);
 
       setCameras(camerasData);
@@ -36,16 +43,23 @@ export function useDatabase() {
       setConfirmedPickups(confirmationsData.confirmedPickups);
       setConfirmedReturns(confirmationsData.confirmedReturns);
       
-      console.log('Data loaded successfully:', {
+      console.log('Supabase data loaded successfully:', {
         cameras: camerasData.length,
         orders: ordersData.length,
         pickups: confirmationsData.confirmedPickups.length,
         returns: confirmationsData.confirmedReturns.length
       });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取数据失败';
-      console.error('Error loading data:', err);
-      setError(errorMessage);
+      console.error('Error loading data from Supabase:', err);
+      
+      // 不设置错误状态，让应用继续使用本地数据
+      console.log('Failed to load from Supabase, continuing with local data');
+      
+      // 只在开发环境显示错误
+      if (import.meta.env.DEV) {
+        const errorMessage = err instanceof Error ? err.message : '获取数据失败';
+        setError(`数据库连接失败: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -54,11 +68,14 @@ export function useDatabase() {
   // Camera operations
   const addCamera = useCallback(async (camera: Omit<Camera, 'id'>) => {
     try {
+      console.log('Adding camera to Supabase:', camera);
       const newCamera = await CameraService.create(camera);
       setCameras(prev => [...prev, newCamera]);
+      console.log('Camera added to Supabase successfully:', newCamera.id);
       return newCamera;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '添加相机失败';
+      console.error('Failed to add camera to Supabase:', err);
       setError(errorMessage);
       throw err;
     }
@@ -78,11 +95,14 @@ export function useDatabase() {
   // Order operations
   const addOrder = useCallback(async (order: Omit<RentalOrder, 'id' | 'createdAt'>) => {
     try {
+      console.log('Adding order to Supabase:', order);
       const newOrder = await OrderService.create(order);
       setOrders(prev => [...prev, newOrder]);
+      console.log('Order added to Supabase successfully:', newOrder.id);
       return newOrder;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '添加订单失败';
+      console.error('Failed to add order to Supabase:', err);
       setError(errorMessage);
       throw err;
     }
