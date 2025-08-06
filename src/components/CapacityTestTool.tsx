@@ -226,22 +226,68 @@ export function CapacityTestTool({ onTestComplete }: CapacityTestToolProps) {
     }
 
     try {
+      setIsRunning(true);
       setCurrentTest('清理测试数据...');
+      setProgress(0);
       
-      // 获取所有相机，找出测试数据
-      const allCameras = await CameraService.getAll();
-      const testCameras = allCameras.filter(camera => camera.serialNumber.startsWith('TEST'));
+      let deletedCount = 0;
       
-      // 删除测试相机（相关订单会通过级联删除）
-      for (const camera of testCameras) {
-        await CameraService.delete(camera.id);
+      // 如果Supabase可用，从数据库清理
+      if (isSupabaseEnabled && supabase) {
+        // 获取所有相机，找出测试数据
+        const allCameras = await CameraService.getAll();
+        const testCameras = allCameras.filter(camera => camera.serialNumber.startsWith('TEST'));
+        
+        // 删除测试相机（相关订单会通过级联删除）
+        for (let i = 0; i < testCameras.length; i++) {
+          const camera = testCameras[i];
+          try {
+            await CameraService.delete(camera.id);
+            deletedCount++;
+            setProgress((i + 1) / testCameras.length * 100);
+          } catch (error) {
+            console.error(`Failed to delete camera ${camera.id}:`, error);
+          }
+        }
+      } else {
+        // 如果没有数据库连接，清理本地存储中的测试数据
+        const localCameras = JSON.parse(localStorage.getItem('cameras') || '[]');
+        const localOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        
+        // 过滤掉测试数据
+        const filteredCameras = localCameras.filter((camera: any) => !camera.serialNumber.startsWith('TEST'));
+        const testCameraIds = localCameras
+          .filter((camera: any) => camera.serialNumber.startsWith('TEST'))
+          .map((camera: any) => camera.id);
+        
+        const filteredOrders = localOrders.filter((order: any) => {
+          const isTestOrder = testCameraIds.some(cameraId => 
+            localCameras.find((cam: any) => cam.id === cameraId && 
+              cam.model === order.cameraModel && 
+              cam.serialNumber === order.cameraSerialNumber
+            )
+          );
+          return !isTestOrder;
+        });
+        
+        // 更新本地存储
+        localStorage.setItem('cameras', JSON.stringify(filteredCameras));
+        localStorage.setItem('orders', JSON.stringify(filteredOrders));
+        
+        deletedCount = localCameras.length - filteredCameras.length;
+        setProgress(100);
       }
       
       setCurrentTest('');
-      alert(`已清理 ${testCameras.length} 台测试相机及其相关数据`);
+      setProgress(0);
+      alert(`已清理 ${deletedCount} 台测试相机及其相关数据`);
       
     } catch (error) {
       alert('清理测试数据失败：' + (error instanceof Error ? error.message : '未知错误'));
+    } finally {
+      setIsRunning(false);
+      setCurrentTest('');
+      setProgress(0);
     }
   };
 

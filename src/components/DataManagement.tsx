@@ -293,11 +293,11 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
           {/* 数据统计 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 bg-blue-50 rounded-lg text-center">
-              <div className="text-2xl font-bold text-blue-600">{cameras.length}</div>
+              <div className="text-2xl font-bold text-blue-600">{cameras.length.toLocaleString()}</div>
               <div className="text-sm text-blue-800">相机总数</div>
             </div>
             <div className="p-4 bg-green-50 rounded-lg text-center">
-              <div className="text-2xl font-bold text-green-600">{orders.length}</div>
+              <div className="text-2xl font-bold text-green-600">{orders.length.toLocaleString()}</div>
               <div className="text-sm text-green-800">订单总数</div>
             </div>
           </div>

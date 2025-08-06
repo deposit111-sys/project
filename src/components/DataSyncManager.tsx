@@ -60,7 +60,7 @@ export function DataSyncManager({
 
       setSyncStatus({ 
         type: 'success', 
-        message: `云端数据统计更新成功！相机：${cameras.length} 台，订单：${orders.length} 个` 
+        message: `云端数据统计更新成功！相机：${cameras.length.toLocaleString()} 台，订单：${orders.length.toLocaleString()} 个` 
       });
     } catch (error) {
       setSyncStatus({ 
@@ -99,7 +99,7 @@ export function DataSyncManager({
 
       setSyncStatus({ 
         type: 'success', 
-        message: `同步成功！获取了 ${cameras.length} 台相机和 ${orders.length} 个订单` 
+        message: `同步成功！获取了 ${cameras.length.toLocaleString()} 台相机和 ${orders.length.toLocaleString()} 个订单` 
       });
 
       // 更新云端数据统计
@@ -195,7 +195,7 @@ export function DataSyncManager({
 
       setSyncStatus({ 
         type: 'success', 
-        message: `上传成功！上传了 ${localCameras.length} 台相机和 ${localOrders.length} 个订单` 
+        message: `上传成功！上传了 ${localCameras.length.toLocaleString()} 台相机和 ${localOrders.length.toLocaleString()} 个订单` 
       });
 
       // 上传完成后重新同步
@@ -253,8 +253,8 @@ export function DataSyncManager({
             <HardDrive className="h-6 w-6 text-blue-600 mx-auto mb-2" />
             <div className="text-lg font-bold text-blue-600">本地数据</div>
             <div className="text-sm text-blue-800">
-              {localCameras.length} 台相机<br />
-              {localOrders.length} 个订单
+              {localCameras.length.toLocaleString()} 台相机<br />
+              {localOrders.length.toLocaleString()} 个订单
             </div>
             <div className="text-xs text-blue-600 mt-1">实时数据</div>
           </div>
@@ -272,8 +272,8 @@ export function DataSyncManager({
             </div>
             <div className="text-lg font-bold text-green-600">数据库</div>
             <div className="text-sm text-green-800">
-              {dbStats.cameras} 台相机<br />
-              {dbStats.orders} 个订单
+              {dbStats.cameras.toLocaleString()} 台相机<br />
+              {dbStats.orders.toLocaleString()} 个订单
             </div>
             {dbStats.lastUpdated && (
               <div className="text-xs text-green-600 mt-1">
