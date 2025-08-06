@@ -139,12 +139,11 @@ function App() {
   const updateOrder = async (id: string, updatedOrder: Partial<RentalOrder>) => {
     // 优先更新本地存储
     setOrders(prevOrders => {
-      const newCamera = {
-        const newOrders = prevOrders.map(order => 
-          order.id === id ? { ...order, ...updatedOrder } : order
-        );
-        return [...newOrders];
-      });
+      const newOrders = prevOrders.map(order => 
+        order.id === id ? { ...order, ...updatedOrder } : order
+      );
+      return [...newOrders];
+    });
     
     // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
     if (databaseConnected) {
@@ -212,87 +211,7 @@ function App() {
       } catch (error) {
         console.warn('Failed to sync return confirmation to database:', error);
         // 不抛出错误，因为本地存储已经成功
-      };
-    }
-  };
-
-  const deleteCamera = async (id: string) => {
-    if (databaseConnected) {
-      try {
-        await dbDeleteCamera(id);
-      } catch (error) {
-        // 如果数据库操作失败，回退到本地存储
-        setCameras(cameras.filter(camera => camera.id !== id));
-        throw error;
       }
-    } else {
-      setCameras(cameras.filter(camera => camera.id !== id));
-    }
-  };
-
-  const addOrder = async (order: Omit<RentalOrder, 'id' | 'createdAt'>) => {
-    if (databaseConnected) {
-      try {
-        await dbAddOrder(order);
-      } catch (error) {
-        // 如果数据库操作失败，回退到本地存储
-        const newOrder = {
-          ...order,
-          id: Date.now().toString(),
-          createdAt: new Date().toISOString()
-        };
-        setOrders([...orders, newOrder]);
-        throw error;
-      }
-    } else {
-      const newOrder = {
-        ...order,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString()
-      };
-      setOrders([...orders, newOrder]);
-    }
-  };
-
-  const updateOrder = async (id: string, updatedOrder: Partial<RentalOrder>) => {
-    if (databaseConnected) {
-      try {
-        await dbUpdateOrder(id, updatedOrder);
-      } catch (error) {
-        // 如果数据库操作失败，回退到本地存储
-        setOrders(prevOrders => {
-          const newOrders = prevOrders.map(order => 
-            order.id === id ? { ...order, ...updatedOrder } : order
-          );
-          return [...newOrders];
-        });
-        throw error;
-      }
-    } else {
-      setOrders(prevOrders => {
-        const newOrders = prevOrders.map(order => 
-          order.id === id ? { ...order, ...updatedOrder } : order
-        );
-        return [...newOrders];
-      });
-    }
-  };
-
-  const deleteOrder = async (id: string) => {
-    if (databaseConnected) {
-      try {
-        await dbDeleteOrder(id);
-      } catch (error) {
-        // 如果数据库操作失败，回退到本地存储
-        setOrders(prevOrders => prevOrders.filter(order => order.id !== id));
-        setConfirmedPickups(prev => prev.filter(orderId => orderId !== id));
-        setConfirmedReturns(prev => prev.filter(orderId => orderId !== id));
-        throw error;
-      }
-    } else {
-      setOrders(prevOrders => prevOrders.filter(order => order.id !== id));
-      setConfirmedPickups(prev => prev.filter(orderId => orderId !== id));
-      setConfirmedReturns(prev => prev.filter(orderId => orderId !== id));
     }
   };
 
@@ -302,50 +221,6 @@ function App() {
     // 清空确认状态，因为导入了新数据
     setConfirmedPickups([]);
     setConfirmedReturns([]);
-  };
-  
-  const handleConfirmPickup = async (orderId: string) => {
-    if (databaseConnected) {
-      try {
-        await dbConfirmPickup(orderId);
-      } catch (error) {
-        // 如果数据库操作失败，回退到本地存储
-        const isCurrentlyConfirmed = confirmedPickups.includes(orderId);
-        const newState = isCurrentlyConfirmed 
-          ? confirmedPickups.filter(id => id !== orderId)
-          : [...confirmedPickups, orderId];
-        setConfirmedPickups(newState);
-        throw error;
-      }
-    } else {
-      const isCurrentlyConfirmed = confirmedPickups.includes(orderId);
-      const newState = isCurrentlyConfirmed 
-        ? confirmedPickups.filter(id => id !== orderId)
-        : [...confirmedPickups, orderId];
-      setConfirmedPickups(newState);
-    }
-  };
-
-  const handleConfirmReturn = async (orderId: string) => {
-    if (databaseConnected) {
-      try {
-        await dbConfirmReturn(orderId);
-      } catch (error) {
-        // 如果数据库操作失败，回退到本地存储
-        const isCurrentlyConfirmed = confirmedReturns.includes(orderId);
-        const newState = isCurrentlyConfirmed 
-          ? confirmedReturns.filter(id => id !== orderId)
-          : [...confirmedReturns, orderId];
-        setConfirmedReturns(newState);
-        throw error;
-      }
-    } else {
-      const isCurrentlyConfirmed = confirmedReturns.includes(orderId);
-      const newState = isCurrentlyConfirmed 
-        ? confirmedReturns.filter(id => id !== orderId)
-        : [...confirmedReturns, orderId];
-      setConfirmedReturns(newState);
-    }
   };
 
   const handleExportExcel = () => {
