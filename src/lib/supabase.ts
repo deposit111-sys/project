@@ -4,10 +4,18 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// 调试信息
+console.log('Supabase URL:', supabaseUrl);
+console.log('Supabase Key exists:', !!supabaseAnonKey);
+
 // 检查环境变量是否配置
 const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && 
   supabaseUrl !== 'your_supabase_project_url' && 
-  supabaseAnonKey !== 'your_supabase_anon_key';
+  supabaseAnonKey !== 'your_supabase_anon_key' &&
+  supabaseUrl.startsWith('https://') &&
+  supabaseUrl.includes('.supabase.co');
+
+console.log('Supabase configured:', isSupabaseConfigured);
 
 // 只有在正确配置时才创建 Supabase 客户端
 export const supabase = isSupabaseConfigured 

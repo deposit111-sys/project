@@ -4,10 +4,12 @@ export class ConfirmationService {
   // 获取所有确认状态
   static async getAll(): Promise<{ confirmedPickups: string[]; confirmedReturns: string[] }> {
     if (!isSupabaseEnabled || !supabase) {
-      throw new Error('数据库未配置');
+      console.log('Supabase not configured, returning empty confirmations');
+      return { confirmedPickups: [], confirmedReturns: [] };
     }
 
     try {
+      console.log('Fetching confirmations from Supabase...');
       const { data, error } = await supabase
         .from(TABLES.CONFIRMATIONS)
         .select('order_id, pickup_confirmed, return_confirmed');
@@ -22,6 +24,7 @@ export class ConfirmationService {
         ?.filter(item => item.return_confirmed)
         .map(item => item.order_id) || [];
 
+      console.log('Confirmations fetched:', { confirmedPickups: confirmedPickups.length, confirmedReturns: confirmedReturns.length });
       return { confirmedPickups, confirmedReturns };
     } catch (error) {
       console.error('Error fetching confirmations:', error);

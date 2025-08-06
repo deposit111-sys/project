@@ -5,10 +5,12 @@ export class OrderService {
   // 获取所有订单
   static async getAll(): Promise<RentalOrder[]> {
     if (!isSupabaseEnabled || !supabase) {
-      throw new Error('数据库未配置');
+      console.log('Supabase not configured, returning empty orders');
+      return [];
     }
 
     try {
+      console.log('Fetching orders from Supabase...');
       const { data, error } = await supabase
         .from(TABLES.RENTAL_ORDERS)
         .select('*')
@@ -16,6 +18,7 @@ export class OrderService {
 
       if (error) throw error;
 
+      console.log('Orders fetched:', data?.length || 0);
       return data?.map(transformDatabaseOrder) || [];
     } catch (error) {
       console.error('Error fetching orders:', error);

@@ -17,6 +17,7 @@ export function useDatabase() {
   const loadData = async () => {
     // 如果 Supabase 未配置，设置空数据并返回
     if (!isSupabaseEnabled) {
+      console.log('Supabase not enabled, using empty data');
       setCameras([]);
       setOrders([]);
       setConfirmedPickups([]);
@@ -28,6 +29,7 @@ export function useDatabase() {
     try {
       setLoading(true);
       setError(null);
+      console.log('Loading data from Supabase...');
 
       const [camerasData, ordersData, confirmationsData] = await Promise.all([
         CameraService.getAll(),
@@ -35,13 +37,30 @@ export function useDatabase() {
         ConfirmationService.getAll()
       ]);
 
+      console.log('Data loaded successfully:', {
+        cameras: camerasData.length,
+        orders: ordersData.length,
+        confirmations: confirmationsData
+      });
+
       setCameras(camerasData);
       setOrders(ordersData);
       setConfirmedPickups(confirmationsData.confirmedPickups);
       setConfirmedReturns(confirmationsData.confirmedReturns);
     } catch (err) {
       console.error('Error loading data:', err);
-      setError(err instanceof Error ? err.message : '加载数据失败');
+      const errorMessage = err instanceof Error ? err.message : '加载数据失败';
+      console.error('Setting error message:', errorMessage);
+      setError(errorMessage);
+      
+      // 如果是网络错误，设置空数据以便应用继续工作
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        console.log('Network error detected, falling back to empty data');
+        setCameras([]);
+        setOrders([]);
+        setConfirmedPickups([]);
+        setConfirmedReturns([]);
+      }
     } finally {
       setLoading(false);
     }

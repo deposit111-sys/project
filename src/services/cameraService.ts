@@ -5,10 +5,12 @@ export class CameraService {
   // 获取所有相机
   static async getAll(): Promise<Camera[]> {
     if (!isSupabaseEnabled || !supabase) {
-      throw new Error('数据库未配置');
+      console.log('Supabase not configured, returning empty cameras');
+      return [];
     }
 
     try {
+      console.log('Fetching cameras from Supabase...');
       const { data, error } = await supabase
         .from(TABLES.CAMERAS)
         .select('*')
@@ -17,6 +19,7 @@ export class CameraService {
 
       if (error) throw error;
 
+      console.log('Cameras fetched:', data?.length || 0);
       return data?.map(transformDatabaseCamera) || [];
     } catch (error) {
       console.error('Error fetching cameras:', error);
