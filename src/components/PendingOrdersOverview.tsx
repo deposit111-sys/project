@@ -244,18 +244,18 @@ export function PendingOrdersOverview({ orders, confirmedPickups, confirmedRetur
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 text-center">
           <Package className="h-8 w-8 text-orange-600 mx-auto mb-2" />
-          <div className="text-3xl font-bold text-orange-600">{pendingOrders.pendingPickups.length}</div>
+          <div className="text-3xl font-bold text-orange-600">{pendingOrders.pendingPickups.length.toLocaleString()}</div>
           <div className="text-sm font-medium text-orange-800">未取相机</div>
         </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <PackageX className="h-8 w-8 text-red-600 mx-auto mb-2" />
-          <div className="text-3xl font-bold text-red-600">{pendingOrders.pendingReturns.length}</div>
+          <div className="text-3xl font-bold text-red-600">{pendingOrders.pendingReturns.length.toLocaleString()}</div>
           <div className="text-sm font-medium text-red-800">未还相机</div>
         </div>
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
           <AlertTriangle className="h-8 w-8 text-gray-600 mx-auto mb-2" />
           <div className="text-3xl font-bold text-gray-600">
-            {pendingOrders.pendingPickups.length + pendingOrders.pendingReturns.length}
+            {(pendingOrders.pendingPickups.length + pendingOrders.pendingReturns.length).toLocaleString()}
           </div>
           <div className="text-sm font-medium text-gray-800">总计待处理</div>
         </div>

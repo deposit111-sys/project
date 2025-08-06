@@ -455,23 +455,23 @@ export function PickupReturnSchedule({
         <h3 className="text-lg font-semibold text-gray-800 mb-3">当日统计</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
           <div className="p-3 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{pickupOrders.length}</div>
+            <div className="text-2xl font-bold text-blue-600">{pickupOrders.length.toLocaleString()}</div>
             <div className="text-sm text-gray-600">取机数量</div>
           </div>
           <div className="p-3 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">{returnOrders.length}</div>
+            <div className="text-2xl font-bold text-orange-600">{returnOrders.length.toLocaleString()}</div>
             <div className="text-sm text-gray-600">还机数量</div>
           </div>
           <div className="p-3 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-gray-800">{pickupOrders.length + returnOrders.length}</div>
+            <div className="text-2xl font-bold text-gray-800">{(pickupOrders.length + returnOrders.length).toLocaleString()}</div>
             <div className="text-sm text-gray-600">总安排</div>
           </div>
           <div className="p-3 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">{pendingPickupOrders.length}</div>
+            <div className="text-2xl font-bold text-orange-600">{pendingPickupOrders.length.toLocaleString()}</div>
             <div className="text-sm text-gray-600">未取数量</div>
           </div>
           <div className="p-3 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-red-600">{pendingReturnOrders.length}</div>
+            <div className="text-2xl font-bold text-red-600">{pendingReturnOrders.length.toLocaleString()}</div>
             <div className="text-sm text-gray-600">未还数量</div>
           </div>
         </div>
