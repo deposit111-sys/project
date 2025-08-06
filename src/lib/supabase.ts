@@ -26,7 +26,7 @@ export const supabase = isSupabaseConfigured
         fetch: (url, options = {}) => {
           return fetch(url, {
             ...options,
-            signal: AbortSignal.timeout(15000) // 15秒超时
+            signal: AbortSignal.timeout(30000) // 30秒超时
           }).catch(error => {
             console.log('Supabase fetch error:', error);
             throw error;
