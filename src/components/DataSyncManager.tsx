@@ -3,7 +3,7 @@ import { Camera, RentalOrder } from '../types';
 import { CameraService } from '../services/cameraService';
 import { OrderService } from '../services/orderService';
 import { ConfirmationService } from '../services/confirmationService';
-import { RefreshCw, Upload, Download, AlertTriangle, CheckCircle, Database, HardDrive, FolderSync as Sync, RotateCcw } from 'lucide-react';
+import { RefreshCw, Upload, Download, AlertTriangle, CheckCircle, Database, HardDrive, FolderSync as Sync, RotateCcw, Trash2 } from 'lucide-react';
 
 interface DataSyncManagerProps {
   localCameras: Camera[];
@@ -209,9 +209,62 @@ export function DataSyncManager({
       }, 1000);
 
     } catch (error) {
+  // 清空云端数据库
+  const clearDatabase = async () => {
+    if (!window.confirm(
+      '警告：此操作将清空云端数据库中的所有数据！\n\n' +
+      '这包括：\n' +
+      '- 所有相机数据\n' +
+      '- 所有订单数据\n' +
+      '- 所有确认状态数据\n\n' +
+      '此操作无法撤销！确定要继续吗？'
+    )) {
+      return;
+    }
+      setSyncStatus({ 
+    if (!window.confirm('最后确认：真的要清空整个云端数据库吗？')) {
+      return;
+    }
+        type: 'error', 
+    try {
+      setSyncing(true);
+      setSyncStatus({ type: 'info', message: '正在清空云端数据库...' });
+        message: error instanceof Error ? error.message : '上传失败' 
+      // 获取所有数据用于统计
+      const [cameras, orders] = await Promise.all([
+        CameraService.getAll(),
+        OrderService.getAll()
+      ]);
+      });
+      const totalCameras = cameras.length;
+      const totalOrders = orders.length;
+    } finally {
+      // 删除所有订单（会级联删除确认状态）
+      for (const order of orders) {
+        await OrderService.delete(order.id);
+      }
+      setSyncing(false);
+      // 删除所有相机
+      for (const camera of cameras) {
+        await CameraService.delete(camera.id);
+      }
+      setTimeout(() => setSyncStatus({ type: null, message: '' }), 5000);
+      setSyncStatus({ 
+        type: 'success', 
+        message: `云端数据库清空成功！删除了 ${totalCameras} 台相机和 ${totalOrders} 个订单` 
+      });
+    }
+      // 更新云端数据统计
+      setDbStats({
+        cameras: 0,
+        orders: 0,
+        lastUpdated: new Date().toLocaleString('zh-CN')
+      });
+  };
+    } catch (error) {
       setSyncStatus({ 
         type: 'error', 
-        message: error instanceof Error ? error.message : '上传失败' 
+        message: error instanceof Error ? error.message : '清空数据库失败' 
       });
     } finally {
       setSyncing(false);
@@ -329,6 +382,18 @@ export function DataSyncManager({
             上传本地数据到数据库
           </button>
         </div>
+          <button
+            onClick={clearDatabase}
+            disabled={syncing || refreshing}
+            className="w-full flex items-center justify-center px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {syncing ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-2" />
+            )}
+            清空云端数据库
+          </button>
 
         {/* 使用说明 */}
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -340,9 +405,11 @@ export function DataSyncManager({
                 <li>• <strong>刷新云端数据统计</strong>：获取最新的云端数据数量信息</li>
                 <li>• <strong>从数据库同步</strong>：将云端数据下载到本地，覆盖本地数据</li>
                 <li>• <strong>上传到数据库</strong>：将本地数据上传到云端，与现有数据合并</li>
+                <li>• <strong>清空云端数据库</strong>：删除云端数据库中的所有数据（危险操作）</li>
                 <li>• 建议在多设备使用前先进行数据同步</li>
                 <li>• 上传前请确保本地数据是最新的</li>
                 <li>• 如果添加数据后本地界面未更新，请点击刷新按钮</li>
+                <li>• <strong>警告：清空数据库操作无法撤销，请谨慎使用</strong></li>
               </ul>
             </div>
           </div>
