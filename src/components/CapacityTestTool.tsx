@@ -284,9 +284,39 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
       
       // 清理本地存储中的测试数据
       try {
-        // 如果没有数据库连接，清理本地存储中的测试数据
-        const localCameras = JSON.parse(localStorage.getItem('cameras') || '[]');
-        const localOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        // 安全地获取本地存储数据
+        const getCamerasFromStorage = () => {
+          try {
+            const data = localStorage.getItem('cameras');
+            return data ? JSON.parse(data) : [];
+          } catch (error) {
+            console.warn('Failed to parse cameras from localStorage:', error);
+            return [];
+          }
+        };
+        
+        const getOrdersFromStorage = () => {
+          try {
+            const data = localStorage.getItem('orders');
+            return data ? JSON.parse(data) : [];
+          } catch (error) {
+            console.warn('Failed to parse orders from localStorage:', error);
+            return [];
+          }
+        };
+        
+        const getConfirmationsFromStorage = (key: string) => {
+          try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
+          } catch (error) {
+            console.warn(`Failed to parse ${key} from localStorage:`, error);
+            return [];
+          }
+        };
+        
+        const localCameras = getCamerasFromStorage();
+        const localOrders = getOrdersFromStorage();
         
         // 先获取被删除的测试订单的ID（在过滤之前）
         const deletedTestOrderIds = localOrders
@@ -313,8 +343,8 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
         localStorage.setItem('orders', JSON.stringify(filteredOrders));
         
         // 同时清理确认状态中的测试数据
-        const localConfirmedPickups = JSON.parse(localStorage.getItem('confirmedPickups') || '[]');
-        const localConfirmedReturns = JSON.parse(localStorage.getItem('confirmedReturns') || '[]');
+        const localConfirmedPickups = getConfirmationsFromStorage('confirmedPickups');
+        const localConfirmedReturns = getConfirmationsFromStorage('confirmedReturns');
         
         // 清理确认状态
         const filteredPickups = localConfirmedPickups.filter((id: string) => !deletedTestOrderIds.includes(id));
@@ -347,8 +377,28 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
       
       // 重新读取数据验证清理结果
       try {
-        const remainingCameras = JSON.parse(localStorage.getItem('cameras') || '[]');
-        const remainingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const getCamerasFromStorage = () => {
+          try {
+            const data = localStorage.getItem('cameras');
+            return data ? JSON.parse(data) : [];
+          } catch (error) {
+            console.warn('Failed to parse cameras from localStorage:', error);
+            return [];
+          }
+        };
+        
+        const getOrdersFromStorage = () => {
+          try {
+            const data = localStorage.getItem('orders');
+            return data ? JSON.parse(data) : [];
+          } catch (error) {
+            console.warn('Failed to parse orders from localStorage:', error);
+            return [];
+          }
+        };
+        
+        const remainingCameras = getCamerasFromStorage();
+        const remainingOrders = getOrdersFromStorage();
         const testCamerasRemaining = remainingCameras.filter((camera: any) => camera.serialNumber.startsWith('TEST')).length;
         const testOrdersRemaining = remainingOrders.filter((order: any) => order.cameraSerialNumber.startsWith('TEST')).length;
         
