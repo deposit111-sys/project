@@ -1,9 +1,13 @@
-import { supabase, TABLES, transformDatabaseOrder, transformToDatabase } from '../lib/supabase';
+import { supabase, TABLES, transformDatabaseOrder, transformToDatabase, isSupabaseEnabled } from '../lib/supabase';
 import { RentalOrder } from '../types';
 
 export class OrderService {
   // 获取所有订单
   static async getAll(): Promise<RentalOrder[]> {
+    if (!isSupabaseEnabled || !supabase) {
+      throw new Error('数据库未配置');
+    }
+
     try {
       const { data, error } = await supabase
         .from(TABLES.RENTAL_ORDERS)

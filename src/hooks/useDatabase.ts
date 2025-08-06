@@ -3,6 +3,7 @@ import { Camera, RentalOrder } from '../types';
 import { CameraService } from '../services/cameraService';
 import { OrderService } from '../services/orderService';
 import { ConfirmationService } from '../services/confirmationService';
+import { isSupabaseEnabled } from '../lib/supabase';
 
 export function useDatabase() {
   const [cameras, setCameras] = useState<Camera[]>([]);
@@ -14,6 +15,12 @@ export function useDatabase() {
 
   // 加载所有数据
   const loadData = async () => {
+    // 如果 Supabase 未配置，直接返回空数据
+    if (!isSupabaseEnabled) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);

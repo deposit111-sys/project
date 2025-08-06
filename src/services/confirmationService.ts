@@ -1,8 +1,12 @@
-import { supabase, TABLES } from '../lib/supabase';
+import { supabase, TABLES, isSupabaseEnabled } from '../lib/supabase';
 
 export class ConfirmationService {
   // 获取所有确认状态
   static async getAll(): Promise<{ confirmedPickups: string[]; confirmedReturns: string[] }> {
+    if (!isSupabaseEnabled || !supabase) {
+      throw new Error('数据库未配置');
+    }
+
     try {
       const { data, error } = await supabase
         .from(TABLES.CONFIRMATIONS)

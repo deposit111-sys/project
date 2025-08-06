@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseEnabled } from '../lib/supabase';
 import { Database, Wifi, WifiOff, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface DatabaseStatusProps {
@@ -12,6 +12,14 @@ export function DatabaseStatus({ onConnectionChange }: DatabaseStatusProps) {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   const checkConnection = async () => {
+    // 如果 Supabase 未配置，设置为未连接状态
+    if (!isSupabaseEnabled || !supabase) {
+      setIsConnected(false);
+      setLastChecked(new Date());
+      onConnectionChange?.(false);
+      return;
+    }
+
     setIsChecking(true);
     try {
       const { error } = await supabase.from('cameras').select('count', { count: 'exact', head: true });

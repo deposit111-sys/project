@@ -1,9 +1,13 @@
-import { supabase, TABLES, transformDatabaseCamera, transformToDatabase } from '../lib/supabase';
+import { supabase, TABLES, transformDatabaseCamera, transformToDatabase, isSupabaseEnabled } from '../lib/supabase';
 import { Camera } from '../types';
 
 export class CameraService {
   // 获取所有相机
   static async getAll(): Promise<Camera[]> {
+    if (!isSupabaseEnabled || !supabase) {
+      throw new Error('数据库未配置');
+    }
+
     try {
       const { data, error } = await supabase
         .from(TABLES.CAMERAS)
