@@ -104,3 +104,16 @@ export const transformCameraForDatabase = (camera: any) => {
     serial_number: camera.serialNumber
   };
 };
+
+// Table names constant
+export const TABLES = {
+  CAMERAS: 'cameras',
+  RENTAL_ORDERS: 'rental_orders',
+  CONFIRMATIONS: 'confirmations'
+};
+
+// Transform functions bundled for service imports
+export const transformToDatabase = {
+  order: transformOrderForDatabase,
+  camera: transformCameraForDatabase
+};
