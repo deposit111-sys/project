@@ -3,16 +3,7 @@ import { Camera, RentalOrder } from '../types';
 import { CameraService } from '../services/cameraService';
 import { OrderService } from '../services/orderService';
 import { ConfirmationService } from '../services/confirmationService';
-import { 
-  RefreshCw, 
-  Upload, 
-  Download, 
-  AlertTriangle, 
-  CheckCircle, 
-  Database,
-  HardDrive,
-  Sync
-} from 'lucide-react';
+import { RefreshCw, Upload, Download, AlertTriangle, CheckCircle, Database, HardDrive, FolderSync as Sync } from 'lucide-react';
 
 interface DataSyncManagerProps {
   localCameras: Camera[];
