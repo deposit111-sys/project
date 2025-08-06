@@ -357,54 +357,53 @@ export function checkAndRepairData(): {
   const issues: string[] = [];
   let repaired = false;
   
-  // 检查关键数据的完整性
+  // 检查关键数据的完整性 - 扩展备份层级
   const criticalKeys = ['confirmedPickups', 'confirmedReturns', 'cameras', 'orders', 'showOrderModal', 'activeTab'];
+  
+  // 扩展的备份键名
+  const getAllBackupKeys = (key: string) => [
+    `${key}_backup`,
+    `${key}_backup2`, 
+    `${key}_backup3`,
+    ...Object.keys(localStorage).filter(k => k.startsWith(`${key}_backup_`) && k.match(/_backup_\d+$/))
+  ];
   
   criticalKeys.forEach(key => {
     try {
       const mainData = localStorage.getItem(key);
-      const backupKey = `${key}_backup`;
-      const backupData = localStorage.getItem(backupKey);
-      const secondaryBackupKey = `${key}_backup2`;
-      const secondaryBackupData = localStorage.getItem(secondaryBackupKey);
+      const allBackupKeys = getAllBackupKeys(key);
+      const backupDataList = allBackupKeys.map(backupKey => ({
+        key: backupKey,
+        data: localStorage.getItem(backupKey)
+      })).filter(item => item.data);
       
       const isMainDataValid = isValidData(mainData);
-      const isBackupDataValid = isValidData(backupData);
-      const isSecondaryBackupDataValid = isValidData(secondaryBackupData);
+      const validBackups = backupDataList.filter(item => isValidData(item.data));
       
-      if (!isMainDataValid && (isBackupDataValid || isSecondaryBackupDataValid)) {
+      if (!isMainDataValid && validBackups.length > 0) {
         // 主数据丢失，从备份恢复
         let restored = false;
         
-        // 优先从主备份恢复
-        if (isBackupDataValid) {
+        // 按优先级尝试恢复（主备份 -> 二级备份 -> 三级备份 -> 时间戳备份）
+        for (const backup of validBackups) {
           try {
-            const backup = JSON.parse(backupData);
-            if (backup.data) {
-              localStorage.setItem(key, JSON.stringify(backup.data));
-              issues.push(`Restored ${key} from primary backup`);
+            const backupContent = JSON.parse(backup.data);
+            if (backupContent.data) {
+              localStorage.setItem(key, JSON.stringify(backupContent.data));
+              issues.push(`Restored ${key} from backup: ${backup.key}`);
               repaired = true;
               restored = true;
+              break;
             }
           } catch (error) {
-            console.error(`Failed to restore from primary backup for ${key}:`, error);
+            console.error(`Failed to restore from backup ${backup.key} for ${key}:`, error);
           }
         }
         
-        // 如果主备份失败，尝试从二级备份恢复
-        if (!restored && isSecondaryBackupDataValid) {
-          try {
-            const secondaryBackup = JSON.parse(secondaryBackupData);
-            if (secondaryBackup.data) {
-              localStorage.setItem(key, JSON.stringify(secondaryBackup.data));
-              issues.push(`Restored ${key} from secondary backup`);
-              repaired = true;
-            }
-          } catch (error) {
-            console.error(`Failed to restore from secondary backup for ${key}:`, error);
-          }
+        if (!restored) {
+          issues.push(`Failed to restore ${key} from any backup`);
         }
-      } else if (isMainDataValid && (!isBackupDataValid || !isSecondaryBackupDataValid)) {
+      } else if (isMainDataValid && validBackups.length < 3) {
         // 备份丢失，重新创建
         try {
           const parsedMainData = JSON.parse(mainData);
@@ -412,44 +411,92 @@ export function checkAndRepairData(): {
             data: parsedMainData,
             timestamp: Date.now(),
             version: '1.0',
-            checksum: generateChecksum(parsedMainData)
+            checksum: generateChecksum(parsedMainData),
+            originalKey: key,
+            backupLevel: 'repair'
           };
           
-          if (!isBackupDataValid) {
-            localStorage.setItem(backupKey, JSON.stringify(backupDataObj));
-            issues.push(`Recreated primary backup for ${key}`);
-            repaired = true;
-          }
+          // 重新创建所有级别的备份
+          const backupKeys = [`${key}_backup`, `${key}_backup2`, `${key}_backup3`];
+          backupKeys.forEach((backupKey, index) => {
+            const existingBackup = localStorage.getItem(backupKey);
+            if (!isValidData(existingBackup)) {
+              const levelBackupData = { ...backupDataObj, backupLevel: ['primary', 'secondary', 'tertiary'][index] };
+              localStorage.setItem(backupKey, JSON.stringify(levelBackupData));
+              issues.push(`Recreated ${['primary', 'secondary', 'tertiary'][index]} backup for ${key}`);
+              repaired = true;
+            }
+          });
           
-          if (!isSecondaryBackupDataValid) {
-            localStorage.setItem(secondaryBackupKey, JSON.stringify(backupDataObj));
-            issues.push(`Recreated secondary backup for ${key}`);
-            repaired = true;
-          }
+          // 创建时间戳备份
+          const timestampBackupKey = `${key}_backup_${Date.now()}`;
+          const timestampBackupData = { ...backupDataObj, backupLevel: 'timestamp' };
+          localStorage.setItem(timestampBackupKey, JSON.stringify(timestampBackupData));
+          issues.push(`Created timestamp backup for ${key}`);
+          repaired = true;
         } catch (error) {
           console.error(`Failed to recreate backup for ${key}:`, error);
           issues.push(`Failed to recreate backup for ${key}: ${error.message}`);
         }
-      } else if (!isMainDataValid && !isBackupDataValid && !isSecondaryBackupDataValid) {
-        // 所有数据都损坏或丢失
-        issues.push(`All data lost for ${key}, needs reinitialization`);
-        // 设置默认值
-        const defaultValue = key.includes('confirmed') ? '[]' : (key === 'showOrderModal' ? 'false' : (key === 'activeTab' ? '"pickup"' : '[]'));
-        try {
-          localStorage.setItem(key, defaultValue);
-          const parsedDefault = JSON.parse(defaultValue);
-          const backupDataObj = {
-            data: parsedDefault,
-            timestamp: Date.now(),
-            version: '1.0',
-            checksum: generateChecksum(parsedDefault)
-          };
-          localStorage.setItem(backupKey, JSON.stringify(backupDataObj));
-          localStorage.setItem(secondaryBackupKey, JSON.stringify(backupDataObj));
-          issues.push(`Reinitialized ${key} with default value`);
-          repaired = true;
-        } catch (error) {
-          console.error(`Failed to reinitialize ${key}:`, error);
+      } else if (!isMainDataValid && validBackups.length === 0) {
+        // 所有数据都损坏或丢失 - 尝试从紧急备份恢复
+        const emergencyKeys = Object.keys(localStorage).filter(k => k.startsWith(`${key}_emergency`));
+        let emergencyRestored = false;
+        
+        for (const emergencyKey of emergencyKeys) {
+          try {
+            const emergencyData = localStorage.getItem(emergencyKey);
+            if (emergencyData && isValidData(emergencyData)) {
+              const parsedEmergencyData = JSON.parse(emergencyData);
+              localStorage.setItem(key, emergencyData);
+              
+              // 重新创建所有备份
+              const backupDataObj = {
+                data: parsedEmergencyData,
+                timestamp: Date.now(),
+                version: '1.0',
+                checksum: generateChecksum(parsedEmergencyData),
+                originalKey: key,
+                backupLevel: 'emergency_restore'
+              };
+              
+              localStorage.setItem(`${key}_backup`, JSON.stringify(backupDataObj));
+              localStorage.setItem(`${key}_backup2`, JSON.stringify(backupDataObj));
+              localStorage.setItem(`${key}_backup3`, JSON.stringify(backupDataObj));
+              
+              issues.push(`Restored ${key} from emergency backup: ${emergencyKey}`);
+              repaired = true;
+              emergencyRestored = true;
+              break;
+            }
+          } catch (error) {
+            console.error(`Failed to restore from emergency backup ${emergencyKey}:`, error);
+          }
+        }
+        
+        if (!emergencyRestored) {
+          // 最后手段：设置默认值
+          issues.push(`All data lost for ${key}, needs reinitialization`);
+          const defaultValue = key.includes('confirmed') ? '[]' : (key === 'showOrderModal' ? 'false' : (key === 'activeTab' ? '"calendar"' : '[]'));
+          try {
+            localStorage.setItem(key, defaultValue);
+            const parsedDefault = JSON.parse(defaultValue);
+            const backupDataObj = {
+              data: parsedDefault,
+              timestamp: Date.now(),
+              version: '1.0',
+              checksum: generateChecksum(parsedDefault),
+              originalKey: key,
+              backupLevel: 'default_init'
+            };
+            localStorage.setItem(`${key}_backup`, JSON.stringify(backupDataObj));
+            localStorage.setItem(`${key}_backup2`, JSON.stringify(backupDataObj));
+            localStorage.setItem(`${key}_backup3`, JSON.stringify(backupDataObj));
+            issues.push(`Reinitialized ${key} with default value`);
+            repaired = true;
+          } catch (error) {
+            console.error(`Failed to reinitialize ${key}:`, error);
+          }
         }
       }
     } catch (error) {

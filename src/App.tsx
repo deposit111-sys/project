@@ -53,7 +53,21 @@ function App() {
     const result = checkAndRepairData();
     if (result.repaired) {
       console.log('Data repair completed on startup:', result.issues);
+      // 如果有数据修复，显示通知
+      setTimeout(() => {
+        console.log('数据完整性检查完成，已自动修复发现的问题');
+      }, 1000);
     }
+    
+    // 定期进行数据完整性检查（每30分钟）
+    const integrityCheckInterval = setInterval(() => {
+      const checkResult = checkAndRepairData();
+      if (checkResult.repaired) {
+        console.log('Scheduled data integrity check completed:', checkResult.issues);
+      }
+    }, 30 * 60 * 1000); // 30分钟
+    
+    return () => clearInterval(integrityCheckInterval);
   }, []);
 
   // 根据数据库连接状态决定使用哪套数据
