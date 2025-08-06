@@ -288,6 +288,14 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
         const localCameras = JSON.parse(localStorage.getItem('cameras') || '[]');
         const localOrders = JSON.parse(localStorage.getItem('orders') || '[]');
         
+        // 先获取被删除的测试订单的ID（在过滤之前）
+        const deletedTestOrderIds = localOrders
+          .filter((order: any) => order.cameraSerialNumber.startsWith('TEST'))
+          .map((order: any) => order.id);
+        
+        console.log('Found test orders to delete:', deletedTestOrderIds.length);
+        console.log('Test order IDs:', deletedTestOrderIds);
+        
         // 过滤掉测试数据
         const filteredCameras = localCameras.filter((camera: any) => !camera.serialNumber.startsWith('TEST'));
         
@@ -295,6 +303,10 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
         const filteredOrders = localOrders.filter((order: any) => 
           !order.cameraSerialNumber.startsWith('TEST')
         );
+        
+        console.log('Orders before filtering:', localOrders.length);
+        console.log('Orders after filtering:', filteredOrders.length);
+        console.log('Deleted orders count:', localOrders.length - filteredOrders.length);
         
         // 更新本地存储
         localStorage.setItem('cameras', JSON.stringify(filteredCameras));
@@ -304,19 +316,26 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
         const localConfirmedPickups = JSON.parse(localStorage.getItem('confirmedPickups') || '[]');
         const localConfirmedReturns = JSON.parse(localStorage.getItem('confirmedReturns') || '[]');
         
-        // 获取被删除的测试订单的ID
-        const deletedTestOrderIds = localOrders
-          .filter((order: any) => order.cameraSerialNumber.startsWith('TEST'))
-          .map((order: any) => order.id);
-        
         // 清理确认状态
         const filteredPickups = localConfirmedPickups.filter((id: string) => !deletedTestOrderIds.includes(id));
         const filteredReturns = localConfirmedReturns.filter((id: string) => !deletedTestOrderIds.includes(id));
         
+        console.log('Pickups before filtering:', localConfirmedPickups.length);
+        console.log('Pickups after filtering:', filteredPickups.length);
+        console.log('Returns before filtering:', localConfirmedReturns.length);
+        console.log('Returns after filtering:', filteredReturns.length);
+        
         localStorage.setItem('confirmedPickups', JSON.stringify(filteredPickups));
         localStorage.setItem('confirmedReturns', JSON.stringify(filteredReturns));
         
-        deletedCount = localCameras.length - filteredCameras.length;
+        const deletedCamerasCount = localCameras.length - filteredCameras.length;
+        const deletedOrdersCount = localOrders.length - filteredOrders.length;
+        deletedCount = deletedCamerasCount;
+        
+        console.log('Final deletion summary:');
+        console.log('- Deleted cameras:', deletedCamerasCount);
+        console.log('- Deleted orders:', deletedOrdersCount);
+        
         setProgress(100);
       } catch (localError) {
         console.error('Failed to clean local storage:', localError);
@@ -325,7 +344,22 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
       
       setCurrentTest('');
       setProgress(0);
-      alert(`已清理 ${deletedCount} 台测试相机及其相关数据`);
+      
+      // 重新读取数据验证清理结果
+      try {
+        const remainingCameras = JSON.parse(localStorage.getItem('cameras') || '[]');
+        const remainingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const testCamerasRemaining = remainingCameras.filter((camera: any) => camera.serialNumber.startsWith('TEST')).length;
+        const testOrdersRemaining = remainingOrders.filter((order: any) => order.cameraSerialNumber.startsWith('TEST')).length;
+        
+        if (testCamerasRemaining > 0 || testOrdersRemaining > 0) {
+          alert(`清理完成，但仍有 ${testCamerasRemaining} 台测试相机和 ${testOrdersRemaining} 个测试订单未清理。请检查数据。`);
+        } else {
+          alert(`已成功清理 ${deletedCount} 台测试相机及其相关订单数据`);
+        }
+      } catch (verifyError) {
+        alert(`已清理 ${deletedCount} 台测试相机及其相关数据`);
+      }
       
       // 清理完成后刷新页面以更新显示
       setTimeout(() => {
