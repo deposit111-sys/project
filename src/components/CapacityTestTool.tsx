@@ -290,19 +290,11 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
         
         // 过滤掉测试数据
         const filteredCameras = localCameras.filter((camera: any) => !camera.serialNumber.startsWith('TEST'));
-        const testCameraIds = localCameras
-          .filter((camera: any) => camera.serialNumber.startsWith('TEST'))
-          .map((camera: any) => camera.id);
         
-        const filteredOrders = localOrders.filter((order: any) => {
-          const isTestOrder = testCameraIds.some(cameraId => 
-            localCameras.find((cam: any) => cam.id === cameraId && 
-              cam.model === order.cameraModel && 
-              cam.serialNumber === order.cameraSerialNumber
-            )
-          );
-          return !isTestOrder;
-        });
+        // 过滤掉使用测试相机的订单（相机编号以TEST开头）
+        const filteredOrders = localOrders.filter((order: any) => 
+          !order.cameraSerialNumber.startsWith('TEST')
+        );
         
         // 更新本地存储
         localStorage.setItem('cameras', JSON.stringify(filteredCameras));
@@ -312,19 +304,14 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
         const localConfirmedPickups = JSON.parse(localStorage.getItem('confirmedPickups') || '[]');
         const localConfirmedReturns = JSON.parse(localStorage.getItem('confirmedReturns') || '[]');
         
-        // 获取测试订单的ID
-        const testOrderIds = localOrders
-          .filter((order: any) => testCameraIds.some(cameraId => 
-            localCameras.find((cam: any) => cam.id === cameraId && 
-              cam.model === order.cameraModel && 
-              cam.serialNumber === order.cameraSerialNumber
-            )
-          ))
+        // 获取被删除的测试订单的ID
+        const deletedTestOrderIds = localOrders
+          .filter((order: any) => order.cameraSerialNumber.startsWith('TEST'))
           .map((order: any) => order.id);
         
         // 清理确认状态
-        const filteredPickups = localConfirmedPickups.filter((id: string) => !testOrderIds.includes(id));
-        const filteredReturns = localConfirmedReturns.filter((id: string) => !testOrderIds.includes(id));
+        const filteredPickups = localConfirmedPickups.filter((id: string) => !deletedTestOrderIds.includes(id));
+        const filteredReturns = localConfirmedReturns.filter((id: string) => !deletedTestOrderIds.includes(id));
         
         localStorage.setItem('confirmedPickups', JSON.stringify(filteredPickups));
         localStorage.setItem('confirmedReturns', JSON.stringify(filteredReturns));
@@ -333,7 +320,7 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
         setProgress(100);
       } catch (localError) {
         console.error('Failed to clean local storage:', localError);
-        testResults.errors.push('清理本地存储失败');
+        alert('清理本地存储失败：' + (localError instanceof Error ? localError.message : '未知错误'));
       }
       
       setCurrentTest('');
