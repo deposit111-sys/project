@@ -12,14 +12,28 @@ console.log('Supabase Key exists:', !!supabaseAnonKey);
 const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && 
   supabaseUrl !== 'your_supabase_project_url' && 
   supabaseAnonKey !== 'your_supabase_anon_key' &&
-  supabaseUrl.startsWith('https://') &&
-  supabaseUrl.includes('.supabase.co');
+  supabaseUrl.startsWith('https://');
 
 console.log('Supabase configured:', isSupabaseConfigured);
 
 // 只有在正确配置时才创建 Supabase 客户端
 export const supabase = isSupabaseConfigured 
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false
+      },
+      global: {
+        fetch: (url, options = {}) => {
+          return fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(15000) // 15秒超时
+          }).catch(error => {
+            console.log('Supabase fetch error:', error);
+            throw error;
+          });
+        }
+      }
+    })
   : null;
 
 export const isSupabaseEnabled = isSupabaseConfigured;

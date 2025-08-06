@@ -22,13 +22,21 @@ export function DatabaseStatus({ onConnectionChange }: DatabaseStatusProps) {
 
     setIsChecking(true);
     try {
-      const { error } = await supabase.from('cameras').select('count', { count: 'exact', head: true });
+      // 使用更简单的连接测试，避免复杂查询
+      const { error } = await Promise.race([
+        supabase.from('cameras').select('count', { count: 'exact', head: true }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), 10000)
+        )
+      ]);
       const connected = !error;
       setIsConnected(connected);
       setLastChecked(new Date());
       onConnectionChange?.(connected);
     } catch (error) {
+      console.log('Database connection failed:', error);
       setIsConnected(false);
+      setLastChecked(new Date());
       onConnectionChange?.(false);
     } finally {
       setIsChecking(false);

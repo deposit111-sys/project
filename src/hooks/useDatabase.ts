@@ -31,11 +31,17 @@ export function useDatabase() {
       setError(null);
       console.log('Loading data from Supabase...');
 
-      const [camerasData, ordersData, confirmationsData] = await Promise.all([
-        CameraService.getAll(),
-        OrderService.getAll(),
-        ConfirmationService.getAll()
-      ]);
+      // 添加超时保护
+      const [camerasData, ordersData, confirmationsData] = await Promise.race([
+        Promise.all([
+          CameraService.getAll(),
+          OrderService.getAll(),
+          ConfirmationService.getAll()
+        ]),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('数据加载超时，请检查网络连接')), 20000)
+        )
+      ]) as [Camera[], RentalOrder[], { confirmedPickups: string[]; confirmedReturns: string[] }];
 
       console.log('Data loaded successfully:', {
         cameras: camerasData.length,
@@ -49,12 +55,27 @@ export function useDatabase() {
       setConfirmedReturns(confirmationsData.confirmedReturns);
     } catch (err) {
       console.error('Error loading data:', err);
-      const errorMessage = err instanceof Error ? err.message : '加载数据失败';
+      let errorMessage = '加载数据失败';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('Failed to fetch') || err.message.includes('fetch')) {
+          errorMessage = '无法连接到数据库，请检查网络连接或稍后重试';
+        } else if (err.message.includes('timeout') || err.message.includes('超时')) {
+          errorMessage = '数据加载超时，请检查网络连接';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
       console.error('Setting error message:', errorMessage);
       setError(errorMessage);
       
-      // 如果是网络错误，设置空数据以便应用继续工作
-      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+      // 如果是网络错误或超时，设置空数据以便应用继续工作
+      if (err instanceof Error && (
+        err.message.includes('Failed to fetch') || 
+        err.message.includes('timeout') ||
+        err.message.includes('超时')
+      )) {
         console.log('Network error detected, falling back to empty data');
         setCameras([]);
         setOrders([]);
