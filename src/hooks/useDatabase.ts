@@ -33,7 +33,7 @@ export function useDatabase() {
 
       // 添加超时保护
       const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('数据加载超时，请检查网络连接')), 20000)
+        setTimeout(() => reject(new Error('数据加载超时，请检查网络连接')), 60000)
       );
 
       const dataPromise = Promise.all([
