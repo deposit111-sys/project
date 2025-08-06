@@ -42,10 +42,14 @@ export class CameraService {
 
       return transformDatabaseCamera(data);
     } catch (error) {
-      console.error('Error creating camera:', error);
       if (error instanceof Error) {
+        // Don't log expected validation errors to console
+        if (error.message !== '该相机型号和编号已存在') {
+          console.error('Error creating camera:', error);
+        }
         throw error;
       }
+      console.error('Error creating camera:', error);
       throw new Error('添加相机失败');
     }
   }
