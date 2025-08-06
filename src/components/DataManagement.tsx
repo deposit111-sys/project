@@ -25,7 +25,8 @@ import {
   Shield,
   Activity,
   Search,
-  TestTube
+  TestTube,
+  X
 } from 'lucide-react';
 import { CapacityTestTool } from './CapacityTestTool';
 
