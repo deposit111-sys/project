@@ -24,8 +24,10 @@ import {
   Database,
   Shield,
   Activity,
-  Search
+  Search,
+  TestTube
 } from 'lucide-react';
+import { CapacityTestTool } from './CapacityTestTool';
 
 interface DataManagementProps {
   cameras: Camera[];
@@ -35,6 +37,7 @@ interface DataManagementProps {
 
 export function DataManagement({ cameras, orders, onImportData }: DataManagementProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showCapacityTest, setShowCapacityTest] = useState(false);
   const [healthStatus, setHealthStatus] = useState<{
     status: 'healthy' | 'warning' | 'critical';
     lastCheck: string;
@@ -183,6 +186,13 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
             </div>
           )}
           <button
+            onClick={() => setShowCapacityTest(!showCapacityTest)}
+            className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:ring-4 focus:ring-purple-200 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <TestTube className="h-4 w-4 mr-2" />
+            容量测试
+          </button>
+          <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
@@ -190,6 +200,25 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
           </button>
         </div>
       </div>
+
+      {showCapacityTest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-800">数据存储容量测试</h2>
+              <button
+                onClick={() => setShowCapacityTest(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg focus:ring-2 focus:ring-gray-200 transition-all duration-200"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              <CapacityTestTool />
+            </div>
+          </div>
+        </div>
+      )}
 
       {isExpanded && (
         <div className="space-y-6">
