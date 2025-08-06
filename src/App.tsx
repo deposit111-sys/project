@@ -44,7 +44,8 @@ function App() {
     deleteOrder: dbDeleteOrder,
     confirmPickup: dbConfirmPickup,
     confirmReturn: dbConfirmReturn,
-    clearError: dbClearError
+    clearError: dbClearError,
+    loadData: dbLoadData
   } = useDatabase();
 
   // 应用启动时检查和修复数据
@@ -60,6 +61,14 @@ function App() {
   const currentOrders = databaseConnected ? dbOrders : orders;
   const currentConfirmedPickups = databaseConnected ? dbConfirmedPickups : confirmedPickups;
   const currentConfirmedReturns = databaseConnected ? dbConfirmedReturns : confirmedReturns;
+
+  // 当数据库连接状态改变时，重新加载数据
+  React.useEffect(() => {
+    if (databaseConnected) {
+      console.log('Database connected, reloading data...');
+      dbLoadData();
+    }
+  }, [databaseConnected, dbLoadData]);
 
   const handleSwitchToCalendar = (model: string, date: string) => {
     // 切换到日历标签页

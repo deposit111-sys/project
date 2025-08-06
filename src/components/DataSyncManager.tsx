@@ -108,6 +108,11 @@ export function DataSyncManager({
         orders: orders.length,
         lastUpdated: new Date().toLocaleString('zh-CN')
       });
+      
+      // 同步完成后，强制刷新页面以确保所有组件都使用最新数据
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       setSyncStatus({ 
         type: 'error', 

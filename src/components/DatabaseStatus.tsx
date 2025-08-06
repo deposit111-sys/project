@@ -32,12 +32,21 @@ export function DatabaseStatus({ onConnectionChange }: DatabaseStatusProps) {
       const connected = !error;
       setIsConnected(connected);
       setLastChecked(new Date());
-      onConnectionChange?.(connected);
+      
+      // 只有当连接状态发生变化时才通知父组件
+      if (connected !== isConnected) {
+        onConnectionChange?.(connected);
+      }
     } catch (error) {
       console.log('Database connection failed:', error);
+      const wasConnected = isConnected;
       setIsConnected(false);
       setLastChecked(new Date());
-      onConnectionChange?.(false);
+      
+      // 只有当连接状态发生变化时才通知父组件
+      if (wasConnected !== false) {
+        onConnectionChange?.(false);
+      }
     } finally {
       setIsChecking(false);
     }

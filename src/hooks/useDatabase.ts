@@ -57,6 +57,9 @@ export function useDatabase() {
       setOrders(ordersData);
       setConfirmedPickups(confirmationsData.confirmedPickups);
       setConfirmedReturns(confirmationsData.confirmedReturns);
+      
+      // 数据加载成功后清除错误状态
+      setError(null);
     } catch (err) {
       console.error('Error loading data:', err);
       let errorMessage = '加载数据失败';
