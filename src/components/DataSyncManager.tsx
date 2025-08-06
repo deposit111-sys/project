@@ -209,6 +209,16 @@ export function DataSyncManager({
       }, 1000);
 
     } catch (error) {
+      setSyncStatus({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : '上传失败' 
+      });
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncStatus({ type: null, message: '' }), 5000);
+    }
+  };
+
   // 清空云端数据库
   const clearDatabase = async () => {
     if (!window.confirm(
@@ -221,46 +231,46 @@ export function DataSyncManager({
     )) {
       return;
     }
-      setSyncStatus({ 
+
     if (!window.confirm('最后确认：真的要清空整个云端数据库吗？')) {
       return;
     }
-        type: 'error', 
+
     try {
       setSyncing(true);
       setSyncStatus({ type: 'info', message: '正在清空云端数据库...' });
-        message: error instanceof Error ? error.message : '上传失败' 
+
       // 获取所有数据用于统计
       const [cameras, orders] = await Promise.all([
         CameraService.getAll(),
         OrderService.getAll()
       ]);
-      });
+
       const totalCameras = cameras.length;
       const totalOrders = orders.length;
-    } finally {
+
       // 删除所有订单（会级联删除确认状态）
       for (const order of orders) {
         await OrderService.delete(order.id);
       }
-      setSyncing(false);
+
       // 删除所有相机
       for (const camera of cameras) {
         await CameraService.delete(camera.id);
       }
-      setTimeout(() => setSyncStatus({ type: null, message: '' }), 5000);
+
       setSyncStatus({ 
         type: 'success', 
         message: `云端数据库清空成功！删除了 ${totalCameras} 台相机和 ${totalOrders} 个订单` 
       });
-    }
+
       // 更新云端数据统计
       setDbStats({
         cameras: 0,
         orders: 0,
         lastUpdated: new Date().toLocaleString('zh-CN')
       });
-  };
+
     } catch (error) {
       setSyncStatus({ 
         type: 'error', 
@@ -381,7 +391,7 @@ export function DataSyncManager({
             )}
             上传本地数据到数据库
           </button>
-        </div>
+
           <button
             onClick={clearDatabase}
             disabled={syncing || refreshing}
@@ -394,6 +404,7 @@ export function DataSyncManager({
             )}
             清空云端数据库
           </button>
+        </div>
 
         {/* 使用说明 */}
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
