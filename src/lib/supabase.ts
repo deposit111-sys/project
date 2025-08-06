@@ -22,21 +22,12 @@ export const supabase = isSupabaseConfigured
       auth: {
         persistSession: false
       },
-      global: {
-        fetch: (url, options = {}) => {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000);
-          
-          return fetch(url, {
-            ...options,
-            signal: controller.signal
-          }).catch(error => {
-            clearTimeout(timeoutId);
-            console.log('Supabase fetch error:', error.name, error.message);
-            throw error;
-          }).finally(() => {
-            clearTimeout(timeoutId);
-          });
+      db: {
+        schema: 'public'
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 2
         }
       }
     })
