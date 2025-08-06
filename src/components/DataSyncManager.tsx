@@ -3,7 +3,7 @@ import { Camera, RentalOrder } from '../types';
 import { CameraService } from '../services/cameraService';
 import { OrderService } from '../services/orderService';
 import { ConfirmationService } from '../services/confirmationService';
-import { RefreshCw, Upload, Download, AlertTriangle, CheckCircle, Database, HardDrive, FolderSync as Sync } from 'lucide-react';
+import { RefreshCw, Upload, Download, AlertTriangle, CheckCircle, Database, HardDrive, FolderSync as Sync, RotateCcw } from 'lucide-react';
 
 interface DataSyncManagerProps {
   localCameras: Camera[];
@@ -26,10 +26,57 @@ export function DataSyncManager({
   onSyncComplete 
 }: DataSyncManagerProps) {
   const [syncing, setSyncing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [dbStats, setDbStats] = useState<{
+    cameras: number;
+    orders: number;
+    lastUpdated: string | null;
+  }>({
+    cameras: 0,
+    orders: 0,
+    lastUpdated: null
+  });
   const [syncStatus, setSyncStatus] = useState<{
     type: 'success' | 'error' | 'info' | null;
     message: string;
   }>({ type: null, message: '' });
+
+  // 获取云端数据统计
+  const fetchDatabaseStats = async () => {
+    try {
+      setRefreshing(true);
+      setSyncStatus({ type: 'info', message: '正在获取云端数据统计...' });
+
+      const [cameras, orders] = await Promise.all([
+        CameraService.getAll(),
+        OrderService.getAll()
+      ]);
+
+      setDbStats({
+        cameras: cameras.length,
+        orders: orders.length,
+        lastUpdated: new Date().toLocaleString('zh-CN')
+      });
+
+      setSyncStatus({ 
+        type: 'success', 
+        message: `云端数据统计更新成功！相机：${cameras.length} 台，订单：${orders.length} 个` 
+      });
+    } catch (error) {
+      setSyncStatus({ 
+        type: 'error', 
+        message: error instanceof Error ? error.message : '获取云端数据统计失败' 
+      });
+    } finally {
+      setRefreshing(false);
+      setTimeout(() => setSyncStatus({ type: null, message: '' }), 3000);
+    }
+  };
+
+  // 组件加载时获取云端数据统计
+  React.useEffect(() => {
+    fetchDatabaseStats();
+  }, []);
 
   // 从数据库同步到本地
   const syncFromDatabase = async () => {
@@ -53,6 +100,13 @@ export function DataSyncManager({
       setSyncStatus({ 
         type: 'success', 
         message: `同步成功！获取了 ${cameras.length} 台相机和 ${orders.length} 个订单` 
+      });
+
+      // 更新云端数据统计
+      setDbStats({
+        cameras: cameras.length,
+        orders: orders.length,
+        lastUpdated: new Date().toLocaleString('zh-CN')
       });
     } catch (error) {
       setSyncStatus({ 
@@ -202,22 +256,51 @@ export function DataSyncManager({
               {localCameras.length} 台相机<br />
               {localOrders.length} 个订单
             </div>
+            <div className="text-xs text-blue-600 mt-1">实时数据</div>
           </div>
           <div className="p-4 bg-green-50 rounded-lg text-center">
-            <Database className="h-6 w-6 text-green-600 mx-auto mb-2" />
+            <div className="flex items-center justify-center mb-2">
+              <Database className="h-6 w-6 text-green-600 mr-1" />
+              <button
+                onClick={fetchDatabaseStats}
+                disabled={refreshing}
+                className="p-1 text-green-600 hover:text-green-700 hover:bg-green-100 rounded transition-colors duration-200 disabled:opacity-50"
+                title="刷新云端数据统计"
+              >
+                <RotateCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             <div className="text-lg font-bold text-green-600">数据库</div>
             <div className="text-sm text-green-800">
-              云端存储<br />
-              多设备同步
+              {dbStats.cameras} 台相机<br />
+              {dbStats.orders} 个订单
             </div>
+            {dbStats.lastUpdated && (
+              <div className="text-xs text-green-600 mt-1">
+                更新于: {dbStats.lastUpdated}
+              </div>
+            )}
           </div>
         </div>
 
         {/* 同步操作按钮 */}
         <div className="space-y-3">
           <button
+            onClick={fetchDatabaseStats}
+            disabled={refreshing || syncing}
+            className="w-full flex items-center justify-center px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {refreshing ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RotateCcw className="h-4 w-4 mr-2" />
+            )}
+            刷新云端数据统计
+          </button>
+
+          <button
             onClick={syncFromDatabase}
-            disabled={syncing}
+            disabled={syncing || refreshing}
             className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {syncing ? (
@@ -230,7 +313,7 @@ export function DataSyncManager({
 
           <button
             onClick={uploadToDatabase}
-            disabled={syncing}
+            disabled={syncing || refreshing}
             className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 font-medium shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {syncing ? (
@@ -249,10 +332,12 @@ export function DataSyncManager({
             <div className="text-sm text-yellow-800">
               <div className="font-medium mb-1">数据同步说明：</div>
               <ul className="space-y-1 text-xs">
+                <li>• <strong>刷新云端数据统计</strong>：获取最新的云端数据数量信息</li>
                 <li>• <strong>从数据库同步</strong>：将云端数据下载到本地，覆盖本地数据</li>
                 <li>• <strong>上传到数据库</strong>：将本地数据上传到云端，与现有数据合并</li>
                 <li>• 建议在多设备使用前先进行数据同步</li>
                 <li>• 上传前请确保本地数据是最新的</li>
+                <li>• 如果添加数据后本地界面未更新，请点击刷新按钮</li>
               </ul>
             </div>
           </div>
