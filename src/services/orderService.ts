@@ -4,12 +4,12 @@ import { RentalOrder } from '../types';
 export class OrderService {
   // 获取所有订单
   static async getAll(): Promise<RentalOrder[]> {
-    try {
-      if (!isSupabaseEnabled || !supabase) {
-        console.log('Supabase not configured, returning empty orders');
-        return [];
-      }
+    if (!isSupabaseEnabled || !supabase) {
+      console.log('Supabase not configured, returning empty orders');
+      return [];
+    }
 
+    try {
       console.log('Fetching orders from Supabase...');
       const { data, error } = await supabase
         .from(TABLES.RENTAL_ORDERS)
@@ -22,15 +22,6 @@ export class OrderService {
       return data?.map(transformDatabaseOrder) || [];
     } catch (error) {
       console.error('Error fetching orders:', error);
-      // 如果是网络错误，返回空数据而不是抛出错误
-      if (error instanceof Error && (
-        error.message.includes('Failed to fetch') ||
-        error.message.includes('fetch') ||
-        error.message.includes('NetworkError')
-      )) {
-        console.log('Network error, returning empty orders');
-        return [];
-      }
       throw new Error('获取订单列表失败');
     }
   }
