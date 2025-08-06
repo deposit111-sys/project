@@ -57,18 +57,20 @@ function App() {
   }, []);
 
   // 根据数据库连接状态决定使用哪套数据
-  const currentCameras = databaseConnected ? dbCameras : cameras;
-  const currentOrders = databaseConnected ? dbOrders : orders;
-  const currentConfirmedPickups = databaseConnected ? dbConfirmedPickups : confirmedPickups;
-  const currentConfirmedReturns = databaseConnected ? dbConfirmedReturns : confirmedReturns;
+  // 优先使用本地存储数据，只有在本地数据为空且数据库有数据时才使用数据库数据
+  const currentCameras = cameras.length > 0 ? cameras : (databaseConnected ? dbCameras : cameras);
+  const currentOrders = orders.length > 0 ? orders : (databaseConnected ? dbOrders : orders);
+  const currentConfirmedPickups = confirmedPickups.length > 0 ? confirmedPickups : (databaseConnected ? dbConfirmedPickups : confirmedPickups);
+  const currentConfirmedReturns = confirmedReturns.length > 0 ? confirmedReturns : (databaseConnected ? dbConfirmedReturns : confirmedReturns);
 
   // 当数据库连接状态改变时，重新加载数据
-  React.useEffect(() => {
-    if (databaseConnected) {
-      console.log('Database connected, reloading data...');
-      dbLoadData();
-    }
-  }, [databaseConnected, dbLoadData]);
+  // 注释掉自动加载数据库数据的逻辑，优先使用本地数据
+  // React.useEffect(() => {
+  //   if (databaseConnected) {
+  //     console.log('Database connected, reloading data...');
+  //     dbLoadData();
+  //   }
+  // }, [databaseConnected, dbLoadData]);
 
   const handleSwitchToCalendar = (model: string, date: string) => {
     // 切换到日历标签页
@@ -78,24 +80,139 @@ function App() {
   };
   
   const addCamera = async (camera: Omit<CameraType, 'id'>) => {
+    // 优先写入本地存储
+    const newCamera = {
+      ...camera,
+      id: Date.now().toString()
+    };
+    setCameras([...cameras, newCamera]);
+    
+    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
     if (databaseConnected) {
       try {
         await dbAddCamera(camera);
+        console.log('Camera synced to database successfully');
       } catch (error) {
-        // 如果数据库操作失败，回退到本地存储
-        const newCamera = {
-          ...camera,
-          id: Date.now().toString()
-        };
-        setCameras([...cameras, newCamera]);
-        throw error;
+        console.warn('Failed to sync camera to database:', error);
+        // 不抛出错误，因为本地存储已经成功
       }
-    } else {
+    }
+  };
+
+  const deleteCamera = async (id: string) => {
+    // 优先从本地存储删除
+    setCameras(cameras.filter(camera => camera.id !== id));
+    
+    // 如果数据库连接，尝试从数据库删除（但不影响本地操作）
+    if (databaseConnected) {
+      try {
+        await dbDeleteCamera(id);
+        console.log('Camera deleted from database successfully');
+      } catch (error) {
+        console.warn('Failed to delete camera from database:', error);
+        // 不抛出错误，因为本地存储已经成功
+      }
+    }
+  };
+
+  const addOrder = async (order: Omit<RentalOrder, 'id' | 'createdAt'>) => {
+    // 优先写入本地存储
+    const newOrder = {
+      ...order,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    };
+    setOrders([...orders, newOrder]);
+    
+    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
+    if (databaseConnected) {
+      try {
+        await dbAddOrder(order);
+        console.log('Order synced to database successfully');
+      } catch (error) {
+        console.warn('Failed to sync order to database:', error);
+        // 不抛出错误，因为本地存储已经成功
+      }
+    }
+  };
+
+  const updateOrder = async (id: string, updatedOrder: Partial<RentalOrder>) => {
+    // 优先更新本地存储
+    setOrders(prevOrders => {
       const newCamera = {
-        ...camera,
-        id: Date.now().toString()
+        const newOrders = prevOrders.map(order => 
+          order.id === id ? { ...order, ...updatedOrder } : order
+        );
+        return [...newOrders];
+      });
+    
+    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
+    if (databaseConnected) {
+      try {
+        await dbUpdateOrder(id, updatedOrder);
+        console.log('Order updated in database successfully');
+      } catch (error) {
+        console.warn('Failed to update order in database:', error);
+        // 不抛出错误，因为本地存储已经成功
+      }
+    }
+  };
+
+  const deleteOrder = async (id: string) => {
+    // 优先从本地存储删除
+    setOrders(prevOrders => prevOrders.filter(order => order.id !== id));
+    setConfirmedPickups(prev => prev.filter(orderId => orderId !== id));
+    setConfirmedReturns(prev => prev.filter(orderId => orderId !== id));
+    
+    // 如果数据库连接，尝试从数据库删除（但不影响本地操作）
+    if (databaseConnected) {
+      try {
+        await dbDeleteOrder(id);
+        console.log('Order deleted from database successfully');
+      } catch (error) {
+        console.warn('Failed to delete order from database:', error);
+        // 不抛出错误，因为本地存储已经成功
+      }
+    }
+  };
+
+  const handleConfirmPickup = async (orderId: string) => {
+    // 优先更新本地存储
+    const isCurrentlyConfirmed = confirmedPickups.includes(orderId);
+    const newState = isCurrentlyConfirmed 
+      ? confirmedPickups.filter(id => id !== orderId)
+      : [...confirmedPickups, orderId];
+    setConfirmedPickups(newState);
+    
+    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
+    if (databaseConnected) {
+      try {
+        await dbConfirmPickup(orderId);
+        console.log('Pickup confirmation synced to database successfully');
+      } catch (error) {
+        console.warn('Failed to sync pickup confirmation to database:', error);
+        // 不抛出错误，因为本地存储已经成功
+      }
+    }
+  };
+
+  const handleConfirmReturn = async (orderId: string) => {
+    // 优先更新本地存储
+    const isCurrentlyConfirmed = confirmedReturns.includes(orderId);
+    const newState = isCurrentlyConfirmed 
+      ? confirmedReturns.filter(id => id !== orderId)
+      : [...confirmedReturns, orderId];
+    setConfirmedReturns(newState);
+    
+    // 如果数据库连接，尝试同步到数据库（但不影响本地操作）
+    if (databaseConnected) {
+      try {
+        await dbConfirmReturn(orderId);
+        console.log('Return confirmation synced to database successfully');
+      } catch (error) {
+        console.warn('Failed to sync return confirmation to database:', error);
+        // 不抛出错误，因为本地存储已经成功
       };
-      setCameras([...cameras, newCamera]);
     }
   };
 
