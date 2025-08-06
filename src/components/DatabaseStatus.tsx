@@ -24,7 +24,7 @@ export function DatabaseStatus({ onConnectionChange }: DatabaseStatusProps) {
     try {
       // 使用更简单的连接测试，避免复杂查询
       const { error } = await Promise.race([
-        supabase.from('cameras').select('count', { count: 'exact', head: true }),
+        supabase.from('cameras').select('id').limit(1),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Connection timeout')), 10000)
         )
@@ -38,7 +38,10 @@ export function DatabaseStatus({ onConnectionChange }: DatabaseStatusProps) {
         onConnectionChange?.(connected);
       }
     } catch (error) {
-      console.log('Database connection failed:', error);
+      // 只在开发环境下记录详细错误信息
+      if (import.meta.env.DEV) {
+        console.log('Database connection failed:', error);
+      }
       const wasConnected = isConnected;
       setIsConnected(false);
       setLastChecked(new Date());

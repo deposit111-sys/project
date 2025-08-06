@@ -7,8 +7,8 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const isSupabaseEnabled = !!(
   supabaseUrl && 
   supabaseAnonKey && 
-  supabaseUrl !== 'your-supabase-url' && 
-  supabaseAnonKey !== 'your-supabase-anon-key' &&
+  supabaseUrl !== 'your_supabase_project_url' && 
+  supabaseAnonKey !== 'your_supabase_anon_key' &&
   supabaseUrl.includes('.supabase.co')
 );
 
@@ -20,6 +20,11 @@ export const supabase = isSupabaseEnabled
       realtime: {
         params: {
           eventsPerSecond: 10,
+        },
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'camera-rental-system',
         },
       },
     })

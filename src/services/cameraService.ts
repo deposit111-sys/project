@@ -22,6 +22,16 @@ export class CameraService {
       console.log('Cameras fetched:', data?.length || 0);
       return data?.map(transformDatabaseCamera) || [];
     } catch (error) {
+      // 网络错误时返回空数组而不是抛出错误
+      if (error instanceof Error && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError') ||
+        error.name === 'TypeError'
+      )) {
+        console.log('Network error detected, returning empty cameras');
+        return [];
+      }
+      
       console.error('Error fetching cameras:', error);
       throw new Error('获取相机列表失败');
     }
