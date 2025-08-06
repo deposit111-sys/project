@@ -3,6 +3,7 @@ import { Camera, RentalOrder } from '../types';
 import { CameraService } from '../services/cameraService';
 import { OrderService } from '../services/orderService';
 import { ConfirmationService } from '../services/confirmationService';
+import { supabase, isSupabaseEnabled } from '../lib/supabase';
 import { 
   TestTube, 
   Play, 
