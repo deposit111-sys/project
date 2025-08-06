@@ -8,7 +8,10 @@ import {
   checkAndRepairData,
   getStorageInfo, 
   formatFileSize,
-  SystemData 
+  SystemData,
+  performComprehensiveDataCheck,
+  attemptFullDataRecovery,
+  scanAllLocalStorageKeys
 } from '../utils/dataUtils';
 import { 
   Download, 
@@ -119,7 +122,6 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
   };
 
   const handleHealthCheck = () => {
-    const { performComprehensiveDataCheck } = require('../utils/dataUtils');
     const result = performComprehensiveDataCheck();
     setHealthStatus({
       status: result.status,
@@ -316,7 +318,6 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
 
             <button
               onClick={() => {
-                const { attemptFullDataRecovery } = require('../utils/dataUtils');
                 const recovery = attemptFullDataRecovery();
                 
                 if (recovery.recovered) {
@@ -360,7 +361,6 @@ export function DataManagement({ cameras, orders, onImportData }: DataManagement
 
             <button
               onClick={() => {
-                const { scanAllLocalStorageKeys } = require('../utils/dataUtils');
                 const scan = scanAllLocalStorageKeys();
                 
                 let message = `扫描完成！\n\n总共找到 ${scan.allKeys.length} 个存储键\n`;
