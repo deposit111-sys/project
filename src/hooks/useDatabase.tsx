@@ -46,12 +46,22 @@ export function useDatabase() {
     } catch (err) {
       console.error('Error loading data from Supabase:', err);
       
-      // 不设置错误状态，让应用继续使用本地数据
-      console.log('Failed to load from Supabase, continuing with local data');
+      // 检查是否是超时或网络错误
+      const isNetworkError = err instanceof Error && (
+        err.message.includes('TimeoutError') ||
+        err.message.includes('signal timed out') ||
+        err.message.includes('Failed to fetch') ||
+        err.message.includes('NetworkError') ||
+        err.name === 'TimeoutError' ||
+        err.name === 'TypeError'
+      );
       
-      // 只在开发环境显示错误
-      if (import.meta.env.DEV) {
-        console.log('Development mode: Supabase connection failed, but continuing with local data');
+      if (isNetworkError) {
+        console.log('Network/timeout error detected, continuing with local data only');
+        // 不设置错误状态，让应用继续使用本地数据
+      } else {
+        // 其他类型的错误可能需要用户注意
+        console.log('Non-network error occurred:', err);
       }
     } finally {
       setLoading(false);

@@ -31,12 +31,6 @@ export const supabase = isSupabaseEnabled
         headers: {
           'X-Client-Info': 'camera-rental-system',
         },
-        fetch: (url, options = {}) => {
-          return fetch(url, {
-            ...options,
-            signal: AbortSignal.timeout(30000), // 30秒超时
-          });
-        },
       },
     })
   : null;
