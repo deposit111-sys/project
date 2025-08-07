@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
-import { useSupabaseDatabase } from './hooks/useSupabaseDatabase';
+import { useLocalDatabase } from './hooks/useLocalDatabase';
+import { initializeLocalDB } from './lib/indexedDB';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
@@ -15,7 +16,7 @@ import { CapacityTestTool } from './components/CapacityTestTool';
 import { DataManagement } from './components/DataManagement';
 
 function App() {
-  // Supabase 数据库 hooks
+  // 本地数据库 hooks
   const {
     cameras,
     orders,
@@ -36,11 +37,12 @@ function App() {
     getStats,
     optimizeDatabase,
     backupDatabase
-  } = useSupabaseDatabase();
+  } = useLocalDatabase();
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [activeTab, setActiveTab] = useState('calendar');
+  const [isDbInitialized, setIsDbInitialized] = useState(false);
   const [detailedStats, setDetailedStats] = useState({
     totalCameras: 0,
     totalOrders: 0,
@@ -48,6 +50,22 @@ function App() {
     upcomingPickups: 0,
     upcomingReturns: 0
   });
+
+  // 初始化数据库
+  useEffect(() => {
+    const initDB = async () => {
+      try {
+        console.log('🚀 开始初始化本地数据库...');
+        await initializeLocalDB();
+        setIsDbInitialized(true);
+        console.log('✅ 本地数据库初始化成功');
+      } catch (error) {
+        console.error('❌ 本地数据库初始化失败:', error);
+      }
+    };
+    
+    initDB();
+  }, []);
 
   // 计算详细统计信息
   useEffect(() => {
@@ -57,21 +75,21 @@ function App() {
       
       // 活跃租赁：已取但未还的订单
       const activeRentals = orders.filter(order => {
-        const isPickedUp = confirmedPickups.some(pickup => pickup.orderId === order.id);
-        const isReturned = confirmedReturns.some(returnItem => returnItem.orderId === order.id);
+        const isPickedUp = confirmedPickups.includes(order.id);
+        const isReturned = confirmedReturns.includes(order.id);
         return isPickedUp && !isReturned;
       }).length;
 
       // 今日待取：今天需要取的订单
       const upcomingPickups = orders.filter(order => {
-        const isPickedUp = confirmedPickups.some(pickup => pickup.orderId === order.id);
+        const isPickedUp = confirmedPickups.includes(order.id);
         return !isPickedUp && order.pickupDate === todayStr;
       }).length;
 
       // 今日待还：今天需要还的订单
       const upcomingReturns = orders.filter(order => {
-        const isPickedUp = confirmedPickups.some(pickup => pickup.orderId === order.id);
-        const isReturned = confirmedReturns.some(returnItem => returnItem.orderId === order.id);
+        const isPickedUp = confirmedPickups.includes(order.id);
+        const isReturned = confirmedReturns.includes(order.id);
         return isPickedUp && !isReturned && order.returnDate === todayStr;
       }).length;
 
@@ -111,22 +129,22 @@ function App() {
     { id: 'data', label: '强化数据库管理', icon: Database }
   ];
 
-  // 如果数据库加载中，显示加载状态
-  if (loading) {
+  // 如果数据库未初始化或加载中，显示加载状态
+  if (!isDbInitialized || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            连接 Supabase 云端数据库
+            初始化本地数据库
           </h2>
           <p className="text-gray-600">
-            正在建立安全的云端数据库连接...
+            正在初始化本地 IndexedDB 数据库...
           </p>
           {error && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 font-medium">连接失败: {error}</p>
+              <p className="text-red-600 font-medium">初始化失败: {error}</p>
               <p className="text-sm text-red-500 mt-2">
-                请确保已正确配置 Supabase 环境变量，或点击右上角的"Connect to Supabase"按钮进行配置
+                请刷新页面重试，或检查浏览器是否支持 IndexedDB
               </p>
             </div>
           )}
@@ -141,7 +159,7 @@ function App() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">相机租赁管理系统</h1>
-            <p className="text-gray-600 mt-1">基于 Supabase 云端 PostgreSQL 数据库</p>
+            <p className="text-gray-600 mt-1">基于 IndexedDB 本地数据库</p>
           </div>
           <div className="flex items-center space-x-4">
             <button
