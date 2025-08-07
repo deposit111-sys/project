@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Camera, RentalOrder } from '../types';
-import { supabase, isSupabaseEnabled } from '../lib/supabase';
 import { 
   TestTube, 
   Play, 
@@ -245,38 +244,10 @@ export function CapacityTestTool({ cameras, orders, onAddCamera, onAddOrder, onT
       let deletedCount = 0;
       
       // 如果Supabase可用，从数据库清理
-      if (isSupabaseEnabled && supabase) {
+      if (false) {
         // 直接使用SQL删除测试数据，更高效
         try {
-          // 先删除测试订单
-          const { data: deletedOrders, error: orderDeleteError } = await supabase
-            .from('rental_orders')
-            .delete()
-            .like('camera_serial_number', 'TEST%')
-            .select();
-          
-          if (orderDeleteError) {
-            console.warn('Failed to delete test orders:', orderDeleteError);
-          }
-          
-          // 再删除测试相机
-          const { data: deletedCameras, error: deleteError } = await supabase
-            .from('cameras')
-            .delete()
-            .like('serial_number', 'TEST%')
-            .select();
-          
-          if (deleteError) {
-            throw deleteError;
-          }
-          
-          const cameraCount = deletedCameras?.length || 0;
-          const orderCount = deletedOrders?.length || 0;
-          deletedCount = cameraCount;
-          setProgress(100);
-          
-          console.log(`Deleted ${cameraCount} test cameras and ${orderCount} test orders`);
-          
+          // Supabase cleanup disabled
         } catch (dbError) {
           console.error('Database cleanup failed, trying individual deletion:', dbError);
         }
