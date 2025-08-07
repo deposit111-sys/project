@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
-import { useLocalDatabase } from './hooks/useLocalDatabase';
-import { initializeLocalDB } from './lib/indexedDB';
+import { useRobustDatabase } from './hooks/useRobustDatabase';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
@@ -16,26 +15,7 @@ import { CapacityTestTool } from './components/CapacityTestTool';
 import { DataManagement } from './components/DataManagement';
 
 function App() {
-  // 数据库初始化状态
-  const [isDbInitialized, setIsDbInitialized] = useState(false);
-  const [dbInitError, setDbInitError] = useState<string | null>(null);
-
-  // 初始化数据库
-  useEffect(() => {
-    const initDB = async () => {
-      try {
-        await initializeLocalDB();
-        setIsDbInitialized(true);
-      } catch (error) {
-        console.error('IndexedDB 数据库初始化失败:', error);
-        setDbInitError(error instanceof Error ? error.message : '未知错误');
-      }
-    };
-
-    initDB();
-  }, []);
-
-  // IndexedDB 数据库 hooks
+  // 强化数据库 hooks
   const {
     cameras,
     orders,
@@ -43,6 +23,7 @@ function App() {
     confirmedReturns,
     loading,
     error,
+    systemStatus,
     addCamera,
     deleteCamera,
     addOrder,
@@ -55,8 +36,9 @@ function App() {
     clearAllData,
     getStats,
     optimizeDatabase,
-    backupDatabase
-  } = useLocalDatabase();
+    backupDatabase,
+    recoverFromSnapshot
+  } = useRobustDatabase();
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -128,23 +110,47 @@ function App() {
     { id: 'schedule', label: '取还相机目录', icon: CalendarDays },
     { id: 'pending', label: '未还未取统计目录', icon: AlertCircle },
     { id: 'test', label: '数据库稳定性测试', icon: TestTube },
-    { id: 'data', label: '数据管理', icon: Database }
+    { id: 'data', label: '强化数据库管理', icon: Database }
   ];
 
   // 如果数据库加载中，显示加载状态
-  if (!isDbInitialized || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {!isDbInitialized ? '初始化 IndexedDB 数据库' : '加载数据'}
+            初始化强化数据库系统
           </h2>
           <p className="text-gray-600">
-            {!isDbInitialized ? '正在准备 IndexedDB 数据存储环境...' : '正在加载数据...'}
+            正在准备高性能数据存储环境...
           </p>
-          {dbInitError && (
-            <p className="text-red-600 mt-2">初始化失败: {dbInitError}</p>
+          {error && (
+            <p className="text-red-600 mt-2">初始化失败: {error}</p>
           )}
+          
+          {/* 系统状态显示 */}
+          <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium">待处理操作:</span>
+                <span className="ml-2 text-blue-600">{systemStatus.pendingOperations}</span>
+              </div>
+              <div>
+                <span className="font-medium">系统状态:</span>
+                <span className={`ml-2 ${systemStatus.isHealthy ? 'text-green-600' : 'text-red-600'}`}>
+                  {systemStatus.isHealthy ? '健康' : '异常'}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium">数据库大小:</span>
+                <span className="ml-2 text-gray-600">{systemStatus.dbSize}</span>
+              </div>
+              <div>
+                <span className="font-medium">最新快照:</span>
+                <span className="ml-2 text-gray-600">{systemStatus.lastSnapshot || '无'}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -154,7 +160,25 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">相机租赁管理系统</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">相机租赁管理系统</h1>
+            <div className="flex items-center mt-2 space-x-4 text-sm">
+              <div className="flex items-center">
+                <div className={`w-2 h-2 rounded-full mr-2 ${systemStatus.isHealthy ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className="text-gray-600">
+                  系统状态: {systemStatus.isHealthy ? '健康' : '异常'}
+                </span>
+              </div>
+              {systemStatus.pendingOperations > 0 && (
+                <div className="flex items-center">
+                  <div className="w-2 h-2 rounded-full mr-2 bg-yellow-500 animate-pulse"></div>
+                  <span className="text-gray-600">
+                    待处理: {systemStatus.pendingOperations} 个操作
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="flex items-center space-x-4">
             <button
               onClick={handleExportExcel}
@@ -290,6 +314,8 @@ function App() {
                     getStats={getStats}
                     optimizeDatabase={optimizeDatabase}
                     backupDatabase={backupDatabase}
+                    systemStatus={systemStatus}
+                    onRecoverFromSnapshot={recoverFromSnapshot}
                   />
                 )}
               </div>
