@@ -33,7 +33,7 @@ export class CameraService {
       }
       
       console.error('Error fetching cameras:', error);
-      throw new Error('获取相机列表失败');
+      return [];
     }
   }
 

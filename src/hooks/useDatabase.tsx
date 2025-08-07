@@ -26,16 +26,10 @@ export function useDatabase() {
     try {
       console.log('Loading data from Supabase database...');
       
-      // 添加超时控制
-      const [camerasData, ordersData, confirmationsData] = await Promise.race([
-        Promise.all([
-          CameraService.getAll(),
-          OrderService.getAll(),
-          ConfirmationService.getAll()
-        ]),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Database connection timeout')), 60000)
-        )
+      const [camerasData, ordersData, confirmationsData] = await Promise.all([
+        CameraService.getAll(),
+        OrderService.getAll(),
+        ConfirmationService.getAll()
       ]);
 
       setCameras(camerasData);
@@ -57,8 +51,7 @@ export function useDatabase() {
       
       // 只在开发环境显示错误
       if (import.meta.env.DEV) {
-        const errorMessage = err instanceof Error ? err.message : '获取数据失败';
-        setError(`数据库连接失败: ${errorMessage}`);
+        console.log('Development mode: Supabase connection failed, but continuing with local data');
       }
     } finally {
       setLoading(false);

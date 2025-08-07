@@ -27,8 +27,18 @@ export class ConfirmationService {
       console.log('Confirmations fetched:', { confirmedPickups: confirmedPickups.length, confirmedReturns: confirmedReturns.length });
       return { confirmedPickups, confirmedReturns };
     } catch (error) {
+      // 网络错误时返回空数组而不是抛出错误
+      if (error instanceof Error && (
+        error.message.includes('Failed to fetch') ||
+        error.message.includes('NetworkError') ||
+        error.name === 'TypeError'
+      )) {
+        console.log('Network error detected, returning empty confirmations');
+        return { confirmedPickups: [], confirmedReturns: [] };
+      }
+      
       console.error('Error fetching confirmations:', error);
-      throw new Error('获取确认状态失败');
+      return { confirmedPickups: [], confirmedReturns: [] };
     }
   }
 
