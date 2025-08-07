@@ -10,14 +10,7 @@ interface DataManagementProps {
   onImportData: (data: { cameras: Camera[]; orders: RentalOrder[] }) => void;
   onExportData: () => void;
   onClearData: () => void;
-  onOptimizeDatabase?: () => Promise<void>;
-  onBackupDatabase?: (path?: string) => Promise<void>;
-  getStats: () => Promise<{
-    cameras: number;
-    orders: number;
-    confirmations: number;
-    dbSize: string;
-  }> | {
+  getStats: () => {
     totalCameras: number;
     totalOrders: number;
     activeRentals: number;
@@ -34,43 +27,22 @@ export function DataManagement({
   onImportData,
   onExportData,
   onClearData,
-  onOptimizeDatabase,
-  onBackupDatabase,
   getStats
 }: DataManagementProps) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [dbStats, setDbStats] = useState({
-    cameras: 0,
-    orders: 0,
-    confirmations: 0,
-    dbSize: '0 KB'
+    totalCameras: 0,
+    totalOrders: 0,
+    activeRentals: 0,
+    upcomingPickups: 0,
+    upcomingReturns: 0
   });
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [isBackingUp, setIsBackingUp] = useState(false);
 
   // 加载数据库统计信息
   useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const stats = await getStats();
-        if ('totalCameras' in stats) {
-          // 兼容旧版本统计格式
-          setDbStats({
-            cameras: stats.totalCameras,
-            orders: stats.totalOrders,
-            confirmations: 0,
-            dbSize: '未知'
-          });
-        } else {
-          setDbStats(stats);
-        }
-      } catch (error) {
-        console.error('获取数据库统计失败:', error);
-      }
-    };
-
-    loadStats();
+    const stats = getStats();
+    setDbStats(stats);
   }, [getStats, cameras.length, orders.length]);
 
   const handleImport = async () => {
@@ -103,64 +75,34 @@ export function DataManagement({
     }
   };
 
-  const handleOptimize = async () => {
-    if (!onOptimizeDatabase) return;
-    
-    setIsOptimizing(true);
-    try {
-      await onOptimizeDatabase();
-      alert('数据库优化完成！');
-    } catch (error) {
-      console.error('数据库优化失败:', error);
-      alert('数据库优化失败');
-    } finally {
-      setIsOptimizing(false);
-    }
-  };
-
-  const handleBackup = async () => {
-    if (!onBackupDatabase) return;
-    
-    setIsBackingUp(true);
-    try {
-      await onBackupDatabase();
-      alert('数据库备份完成！');
-    } catch (error) {
-      console.error('数据库备份失败:', error);
-      alert('数据库备份失败');
-    } finally {
-      setIsBackingUp(false);
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-2 mb-6">
         <Database className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-800">SQLite数据管理</h2>
+        <h2 className="text-xl font-semibold text-gray-800">本地数据管理</h2>
       </div>
 
       {/* 数据统计 */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-blue-50 p-3 rounded-lg text-center">
-          <div className="text-2xl font-bold text-blue-600">{dbStats.cameras}</div>
+          <div className="text-2xl font-bold text-blue-600">{dbStats.totalCameras}</div>
           <div className="text-sm text-gray-600">相机总数</div>
         </div>
         <div className="bg-green-50 p-3 rounded-lg text-center">
-          <div className="text-2xl font-bold text-green-600">{dbStats.orders}</div>
+          <div className="text-2xl font-bold text-green-600">{dbStats.totalOrders}</div>
           <div className="text-sm text-gray-600">订单总数</div>
         </div>
         <div className="bg-yellow-50 p-3 rounded-lg text-center">
-          <div className="text-2xl font-bold text-yellow-600">{dbStats.confirmations}</div>
-          <div className="text-sm text-gray-600">进行中</div>
+          <div className="text-2xl font-bold text-yellow-600">{dbStats.activeRentals}</div>
+          <div className="text-sm text-gray-600">活跃租赁</div>
         </div>
         <div className="bg-purple-50 p-3 rounded-lg text-center">
-          <div className="text-lg font-bold text-purple-600">{dbStats.dbSize}</div>
-          <div className="text-sm text-gray-600">数据库大小</div>
+          <div className="text-2xl font-bold text-purple-600">{dbStats.upcomingPickups}</div>
+          <div className="text-sm text-gray-600">待取相机</div>
         </div>
         <div className="bg-indigo-50 p-3 rounded-lg text-center">
-          <div className="text-2xl font-bold text-indigo-600">{cameras.length + orders.length}</div>
-          <div className="text-sm text-gray-600">总记录数</div>
+          <div className="text-2xl font-bold text-indigo-600">{dbStats.upcomingReturns}</div>
+          <div className="text-sm text-gray-600">待还相机</div>
         </div>
       </div>
 
@@ -226,41 +168,6 @@ export function DataManagement({
         </div>
       </div>
 
-      {/* SQLite 专用功能 */}
-      {(onOptimizeDatabase || onBackupDatabase) && (
-        <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            SQLite 数据库维护
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* 数据库优化 */}
-            {onOptimizeDatabase && (
-              <button
-                onClick={handleOptimize}
-                disabled={isOptimizing}
-                className="flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                <Settings className={`w-5 h-5 ${isOptimizing ? 'animate-spin' : ''}`} />
-                {isOptimizing ? '优化中...' : '优化数据库'}
-              </button>
-            )}
-
-            {/* 数据库备份 */}
-            {onBackupDatabase && (
-              <button
-                onClick={handleBackup}
-                disabled={isBackingUp}
-                className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                <Archive className={`w-5 h-5 ${isBackingUp ? 'animate-pulse' : ''}`} />
-                {isBackingUp ? '备份中...' : '备份数据库'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* 使用说明 */}
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
         <h3 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
@@ -269,12 +176,9 @@ export function DataManagement({
         </h3>
         <ul className="text-sm text-gray-600 space-y-1">
           <li>• <strong>导出数据</strong>：将所有相机和订单数据导出为JSON文件</li>
-          <li>• <strong>导入数据</strong>：从JSON文件导入数据（会覆盖现有数据）</li>
-          <li>• <strong>清空数据</strong>：删除所有SQLite数据（需要二次确认）</li>
-          <li>• <strong>优化数据库</strong>：清理碎片，提高查询性能</li>
-          <li>• <strong>备份数据库</strong>：创建完整的数据库文件备份</li>
-          <li>• SQLite提供更高的数据稳定性和查询性能</li>
-          <li>• 数据文件位置：./camera_rental.db</li>
+          <li>• <strong>导入数据</strong>：从JSON文件导入数据（会合并到现有数据）</li>
+          <li>• <strong>清空数据</strong>：删除所有本地数据（需要二次确认）</li>
+          <li>• 数据存储在浏览器的IndexedDB中，具有良好的稳定性</li>
         </ul>
       </div>
     </div>

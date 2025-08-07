@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
-import { useSQLiteDatabase } from './hooks/useSQLiteDatabase';
+import { useLocalDatabase } from './hooks/useLocalDatabase';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
@@ -15,7 +15,7 @@ import { CapacityTestTool } from './components/CapacityTestTool';
 import { DataManagement } from './components/DataManagement';
 
 function App() {
-  // SQLite 数据库 hooks
+  // 本地数据库 hooks
   const {
     cameras,
     orders,
@@ -33,11 +33,8 @@ function App() {
     exportData,
     importData,
     clearAllData,
-    getStats,
-    optimizeDatabase,
-    backupDatabase,
-    clearError
-  } = useSQLiteDatabase();
+    getStats
+  } = useLocalDatabase();
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -117,8 +114,7 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">初始化SQLite数据库</h2>
-            <p className="text-gray-600">正在准备SQLite数据存储环境...</p>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">初始化本地数据库</h2>
           <p className="text-gray-600">正在准备数据存储环境...</p>
         </div>
       </div>
@@ -131,12 +127,6 @@ function App() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">相机租赁管理系统</h1>
           <div className="flex items-center space-x-4">
-            {/* SQLite数据库状态显示 */}
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-green-100">
-              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium text-green-800">SQLite数据库</span>
-            </div>
-            
             <button
               onClick={handleExportExcel}
               className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -146,25 +136,6 @@ function App() {
             </button>
           </div>
         </div>
-
-        {/* 错误提示 */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-              <div>
-                <div className="font-medium text-red-800">操作失败</div>
-                <div className="text-sm text-red-700">{error}</div>
-                <button
-                  onClick={clearError}
-                  className="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
-                >
-                  关闭
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
           {/* 左侧区域 */}
@@ -287,8 +258,6 @@ function App() {
                     onImportData={handleImportData}
                     onExportData={exportData}
                     onClearData={clearAllData}
-                    onOptimizeDatabase={optimizeDatabase}
-                    onBackupDatabase={backupDatabase}
                     getStats={getStats}
                   />
                 )}
