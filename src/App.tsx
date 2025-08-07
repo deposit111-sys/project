@@ -12,7 +12,7 @@ import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { ScheduleSearch } from './components/ScheduleSearch';
 import { PickupReturnSchedule } from './components/PickupReturnSchedule';
 import { PendingOrdersOverview } from './components/PendingOrdersOverview';
-import { DataManagement } from './components/DataManagement';
+import DataManagement from './components/DataManagement';
 
 function App() {
   // 本地数据库 hooks
