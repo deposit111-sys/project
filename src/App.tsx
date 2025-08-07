@@ -50,18 +50,6 @@ function App() {
     upcomingReturns: 0
   });
 
-  // 初始化 SQLite 数据库
-  useEffect(() => {
-    const initDB = async () => {
-      try {
-        await initializeSQLiteDB();
-      } catch (error) {
-        console.error('SQLite 数据库初始化失败:', error);
-      }
-    };
-    initDB();
-  }, []);
-
   // 计算详细统计信息
   useEffect(() => {
     const calculateDetailedStats = () => {

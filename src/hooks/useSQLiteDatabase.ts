@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Camera, RentalOrder } from '../types';
-import { sqliteDB, SQLiteCamera, SQLiteOrder } from '../lib/sqliteDatabase';
+import { sqliteDB, SQLiteCamera, SQLiteOrder, initializeSQLiteDB } from '../lib/sqliteDatabase';
 
 export function useSQLiteDatabase() {
   const [cameras, setCameras] = useState<Camera[]>([]);
