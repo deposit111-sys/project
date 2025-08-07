@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle } from 'lucide-react';
+import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube } from 'lucide-react';
 import { useLocalDatabase } from './hooks/useLocalDatabase';
 import { useDatabase } from './hooks/useDatabase';
 import { isSupabaseEnabled } from './lib/supabase';
@@ -16,6 +16,7 @@ import { PickupReturnSchedule } from './components/PickupReturnSchedule';
 import { PendingOrdersOverview } from './components/PendingOrdersOverview';
 import { DataSyncManager } from './components/DataSyncManager';
 import { DatabaseStatus } from './components/DatabaseStatus';
+import { CapacityTestTool } from './components/CapacityTestTool';
 import DataManagement from './components/DataManagement';
 
 function App() {
@@ -214,6 +215,7 @@ function App() {
     { id: 'search', label: '档期检索', icon: Search },
     { id: 'schedule', label: '取还相机目录', icon: CalendarDays },
     { id: 'pending', label: '未还未取统计目录', icon: AlertCircle },
+    { id: 'test', label: '数据库稳定性测试', icon: TestTube },
     ...(isSupabaseEnabled ? [{ id: 'sync', label: '数据同步', icon: Clock }] : [])
   ];
 
@@ -421,6 +423,14 @@ function App() {
                     confirmedReturns={confirmedReturns}
                     onConfirmPickup={confirmPickup}
                     onConfirmReturn={confirmReturn}
+                  />
+                )}
+                {activeTab === 'test' && (
+                  <CapacityTestTool
+                    cameras={cameras}
+                    orders={orders}
+                    onAddCamera={addCamera}
+                    onAddOrder={addOrder}
                   />
                 )}
                 {activeTab === 'sync' && isSupabaseEnabled && (
