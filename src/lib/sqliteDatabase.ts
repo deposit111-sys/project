@@ -1,4 +1,5 @@
-import type { Database } from 'sql.js';
+// SQLite 数据库管理类
+// 使用 CDN 方式加载 sql.js 来避免模块导入问题
 
 export interface SQLiteCamera {
   id: string;
@@ -37,7 +38,7 @@ export interface SQLiteConfirmation {
 }
 
 class SQLiteDatabase {
-  private db: Database | null = null;
+  private db: any = null;
   private SQL: any = null;
   private dbName = 'camera_rental.db';
 
@@ -45,33 +46,8 @@ class SQLiteDatabase {
     try {
       console.log('🔄 开始初始化 SQLite 数据库...');
       
-      // 动态导入 sql.js
-      const sqlModule = await import('sql.js');
-      console.log('📦 sql.js 模块已导入');
-      
-      // 获取 initSqlJs 函数
-      let initSqlJs;
-      if (typeof sqlModule.default === 'function') {
-        initSqlJs = sqlModule.default;
-        console.log('✅ 使用 default 导出的 initSqlJs');
-      } else if (typeof sqlModule === 'function') {
-        initSqlJs = sqlModule;
-        console.log('✅ 使用直接导出的 initSqlJs');
-      } else if (sqlModule.initSqlJs && typeof sqlModule.initSqlJs === 'function') {
-        initSqlJs = sqlModule.initSqlJs;
-        console.log('✅ 使用命名导出的 initSqlJs');
-      } else {
-        console.error('❌ 无法找到 initSqlJs 函数，模块结构:', sqlModule);
-        throw new Error('无法找到 initSqlJs 函数');
-      }
-
-      // 初始化 SQL.js
-      this.SQL = await initSqlJs({
-        locateFile: (file: string) => {
-          console.log('📁 加载 WASM 文件:', file);
-          return `https://sql.js.org/dist/${file}`;
-        }
-      });
+      // 使用 CDN 方式加载 sql.js
+      await this.loadSqlJsFromCDN();
       
       console.log('✅ SQL.js 初始化成功');
 
@@ -98,6 +74,56 @@ class SQLiteDatabase {
       await this.saveToStorage();
     } catch (error) {
       console.error('❌ SQLite 数据库初始化失败:', error);
+      throw error;
+    }
+  }
+
+  private async loadSqlJsFromCDN(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // 检查是否已经加载
+      if ((window as any).initSqlJs) {
+        console.log('✅ SQL.js 已经加载');
+        this.initializeSqlJs();
+        resolve();
+        return;
+      }
+
+      console.log('📦 从 CDN 加载 SQL.js...');
+      
+      // 创建 script 标签加载 sql.js
+      const script = document.createElement('script');
+      script.src = 'https://sql.js.org/dist/sql-wasm.js';
+      script.onload = () => {
+        console.log('📦 SQL.js 脚本加载完成');
+        this.initializeSqlJs();
+        resolve();
+      };
+      script.onerror = (error) => {
+        console.error('❌ 加载 SQL.js 脚本失败:', error);
+        reject(new Error('无法从 CDN 加载 SQL.js'));
+      };
+      
+      document.head.appendChild(script);
+    });
+  }
+
+  private async initializeSqlJs(): Promise<void> {
+    try {
+      const initSqlJs = (window as any).initSqlJs;
+      if (typeof initSqlJs !== 'function') {
+        throw new Error('initSqlJs 不是一个函数');
+      }
+
+      console.log('🔧 初始化 SQL.js...');
+      this.SQL = await initSqlJs({
+        locateFile: (file: string) => {
+          console.log('📁 加载 WASM 文件:', file);
+          return `https://sql.js.org/dist/${file}`;
+        }
+      });
+      console.log('✅ SQL.js 初始化完成');
+    } catch (error) {
+      console.error('❌ 初始化 SQL.js 失败:', error);
       throw error;
     }
   }
