@@ -1,0 +1,25 @@
+directories:
+  output: electron-dist
+  buildResources: build
+appId: com.camerarentalmanagement.app
+productName: 相机租赁管理系统
+files:
+  - filter:
+      - dist/**/*
+      - public/electron.js
+      - node_modules/**/*
+win:
+  target: nsis
+  icon: public/favicon.ico
+mac:
+  target: dmg
+  icon: public/favicon.ico
+linux:
+  target: AppImage
+  icon: public/favicon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+electronVersion: 32.3.3
