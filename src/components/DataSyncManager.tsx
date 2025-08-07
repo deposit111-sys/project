@@ -128,7 +128,10 @@ export function DataSyncManager({
   const uploadToDatabase = async () => {
     if (!window.confirm(
       '确定要将本地数据上传到数据库吗？\n\n' +
-      '这将会覆盖数据库中的现有数据。\n\n' +
+      '⚠️ 警告：这将完全覆盖云端数据库中的所有数据！\n\n' +
+      '操作步骤：\n' +
+      '1. 清空云端数据库\n' +
+      '2. 上传本地数据到云端\n\n' +
       `本地数据：${localCameras.length} 台相机，${localOrders.length} 个订单`
     )) {
       return;
@@ -136,7 +139,25 @@ export function DataSyncManager({
 
     try {
       setSyncing(true);
-      setSyncStatus({ type: 'info', message: '正在上传本地数据到数据库...' });
+      setSyncStatus({ type: 'info', message: '第1步：正在清空云端数据库...' });
+
+      // 第一步：清空云端数据库
+      const [cloudCameras, cloudOrders] = await Promise.all([
+        CameraService.getAll(),
+        OrderService.getAll()
+      ]);
+
+      // 删除所有云端订单（会级联删除确认状态）
+      for (const order of cloudOrders) {
+        await OrderService.delete(order.id);
+      }
+
+      // 删除所有云端相机
+      for (const camera of cloudCameras) {
+        await CameraService.delete(camera.id);
+      }
+
+      setSyncStatus({ type: 'info', message: `第2步：正在上传本地数据到云端数据库...` });
 
       // 上传相机数据
       for (const camera of localCameras) {
@@ -146,10 +167,9 @@ export function DataSyncManager({
             serialNumber: camera.serialNumber
           });
         } catch (error) {
-          // 如果相机已存在，忽略错误
-          if (error instanceof Error && !error.message.includes('已存在')) {
-            throw error;
-          }
+          // 由于已经清空了云端数据库，这里不应该有重复数据错误
+          console.error('Error uploading camera:', error);
+          throw error;
         }
       }
 
@@ -173,8 +193,11 @@ export function DataSyncManager({
           uploadedOrders.push(newOrder);
         } catch (error) {
           console.error('Error uploading order:', error);
+          throw error;
         }
       }
+
+      setSyncStatus({ type: 'info', message: '第3步：正在同步确认状态...' });
 
       // 上传确认状态
       for (const order of uploadedOrders) {
@@ -200,7 +223,7 @@ export function DataSyncManager({
 
       setSyncStatus({ 
         type: 'success', 
-        message: `上传成功！上传了 ${localCameras.length.toLocaleString()} 台相机和 ${localOrders.length.toLocaleString()} 个订单` 
+        message: `覆盖上传成功！已完全替换云端数据：${localCameras.length.toLocaleString()} 台相机和 ${localOrders.length.toLocaleString()} 个订单` 
       });
 
       // 上传完成后重新同步
@@ -211,7 +234,7 @@ export function DataSyncManager({
     } catch (error) {
       setSyncStatus({ 
         type: 'error', 
-        message: error instanceof Error ? error.message : '上传失败' 
+        message: error instanceof Error ? error.message : '覆盖上传失败' 
       });
     } finally {
       setSyncing(false);
@@ -389,7 +412,7 @@ export function DataSyncManager({
             ) : (
               <Upload className="h-4 w-4 mr-2" />
             )}
-            上传本地数据到数据库
+            覆盖上传本地数据到云端
           </button>
 
           <button
@@ -415,12 +438,13 @@ export function DataSyncManager({
               <ul className="space-y-1 text-xs">
                 <li>• <strong>刷新云端数据统计</strong>：获取最新的云端数据数量信息</li>
                 <li>• <strong>从数据库同步</strong>：将云端数据下载到本地，覆盖本地数据</li>
-                <li>• <strong>上传到数据库</strong>：将本地数据上传到云端，与现有数据合并</li>
+                <li>• <strong>覆盖上传到云端</strong>：清空云端数据库，然后上传本地数据完全替换</li>
                 <li>• <strong>清空云端数据库</strong>：删除云端数据库中的所有数据（危险操作）</li>
                 <li>• 建议在多设备使用前先进行数据同步</li>
-                <li>• 上传前请确保本地数据是最新的</li>
+                <li>• <strong>覆盖上传前请确保本地数据是最新且正确的</strong></li>
                 <li>• 如果添加数据后本地界面未更新，请点击刷新按钮</li>
                 <li>• <strong>警告：清空数据库操作无法撤销，请谨慎使用</strong></li>
+                <li>• <strong>警告：覆盖上传会完全替换云端数据，请谨慎使用</strong></li>
               </ul>
             </div>
           </div>
