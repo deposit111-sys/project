@@ -46,7 +46,7 @@ export interface DBSchema {
 
 class LocalDatabase {
   private dbName = 'CameraRentalDB';
-  private version = 1;
+  private version = 21;
   private db: IDBDatabase | null = null;
 
   async init(): Promise<void> {
