@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
 import { useSQLiteDatabase } from './hooks/useSQLiteDatabase';
 import { initializeSQLiteDB } from './lib/sqliteDatabase';
-import { initializeSQLiteDB } from './lib/sqliteDatabase';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
