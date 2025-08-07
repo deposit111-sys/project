@@ -44,13 +44,18 @@ export function SupabaseConnectionDiagnostic() {
       if (config.isConfigured && supabase) {
         console.log('🌐 检查网络连接...');
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          
           const response = await fetch(config.url + '/rest/v1/', {
             method: 'HEAD',
             headers: {
               'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
             },
-            signal: AbortSignal.timeout(10000)
+            signal: controller.signal
           });
+          
+          clearTimeout(timeoutId);
           
           if (response.ok) {
             diagnosticResults.networkCheck = {
@@ -64,6 +69,7 @@ export function SupabaseConnectionDiagnostic() {
             };
           }
         } catch (error) {
+          clearTimeout(timeoutId);
           diagnosticResults.networkCheck = {
             status: 'error',
             message: `网络连接失败: ${error instanceof Error ? error.message : '未知错误'}`
