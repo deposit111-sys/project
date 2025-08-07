@@ -44,7 +44,7 @@ class SQLiteDatabase {
   async init(): Promise<void> {
     try {
       // 导入 sql.js 模块
-      const initSqlJs = (await import('sql.js')).default;
+      const initSqlJs = await import('sql.js');
       
       this.SQL = await initSqlJs({
         locateFile: (file: string) => `https://sql.js.org/dist/${file}`
