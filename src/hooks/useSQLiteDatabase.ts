@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Camera, RentalOrder } from '../types';
 import { sqliteDB, SQLiteCamera, SQLiteOrder, initializeSQLiteDB } from '../lib/sqliteDatabase';
 
-export function useSQLiteDatabase() {
+export function useSQLiteDatabase(isDbInitialized: boolean) {
   const [cameras, setCameras] = useState<Camera[]>([]);
   const [orders, setOrders] = useState<RentalOrder[]>([]);
   const [confirmedPickups, setConfirmedPickups] = useState<string[]>([]);
@@ -365,8 +365,10 @@ export function useSQLiteDatabase() {
 
   // 组件挂载时加载数据
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (isDbInitialized) {
+      loadData();
+    }
+  }, [isDbInitialized, loadData]);
 
   return {
     // 数据
