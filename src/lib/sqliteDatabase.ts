@@ -46,7 +46,7 @@ class SQLiteDatabase {
       console.log('🔄 初始化 SQLite 数据库...');
       
       // 初始化 sql.js
-      const initSqlJs = (await import('sql.js')).default;
+      const { initSqlJs } = await import('sql.js');
       this.SQL = await initSqlJs({
         locateFile: (file: string) => `/sql-wasm.wasm`
       });
