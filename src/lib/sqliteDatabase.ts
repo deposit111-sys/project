@@ -41,31 +41,56 @@ class SQLiteDatabase {
   private SQL: any = null;
   private dbName = 'camera_rental.db';
 
-  async init(): Promise<void> {
-    try {
-      console.log('🔄 初始化 SQLite 数据库...');
+      // 尝试多种方式导入 sql.js
+      let initSqlJs: any = null;
       
-      // 尝试直接导入 initSqlJs 函数
-      let initSqlJs;
       try {
-        // 方法1: 尝试命名导入
-        const { default: sqlJsInit } = await import('sql.js');
-        initSqlJs = sqlJsInit;
+        // 方法1: 直接导入默认导出
+        const { default: sqlJsDefault } = await import('sql.js');
+        if (typeof sqlJsDefault === 'function') {
+          initSqlJs = sqlJsDefault;
+          console.log('✅ 使用默认导出方式导入 sql.js');
+        }
       } catch (error) {
+        console.log('❌ 默认导入失败:', error);
+      }
+      
+      if (!initSqlJs) {
         try {
-          // 方法2: 尝试整个模块导入
+          // 方法2: 导入整个模块
           const sqlModule = await import('sql.js');
-          initSqlJs = sqlModule.default || sqlModule;
-        } catch (error2) {
-          // 方法3: 尝试动态导入
-          const sqlJs = await import('sql.js');
-          initSqlJs = sqlJs.initSqlJs || sqlJs.default || sqlJs;
+          console.log('📦 SQL.js 模块结构:', Object.keys(sqlModule));
+          
+          if (typeof sqlModule.default === 'function') {
+            initSqlJs = sqlModule.default;
+            console.log('✅ 使用模块.default 方式导入 sql.js');
+          } else if (typeof (sqlModule as any).initSqlJs === 'function') {
+            initSqlJs = (sqlModule as any).initSqlJs;
+            console.log('✅ 使用命名导出方式导入 sql.js');
+          } else if (typeof sqlModule === 'function') {
+            initSqlJs = sqlModule;
+            console.log('✅ 使用模块本身方式导入 sql.js');
+          }
+        } catch (error) {
+          console.log('❌ 模块导入失败:', error);
         }
       }
       
-      if (typeof initSqlJs !== 'function') {
-        console.error('SQL.js 模块结构:', await import('sql.js'));
-        throw new Error('无法找到有效的 initSqlJs 函数');
+      if (!initSqlJs) {
+        try {
+          // 方法3: 尝试全局变量或其他导入方式
+          const sqlJs = await import('sql.js/dist/sql-wasm.js');
+          if (typeof sqlJs.default === 'function') {
+            initSqlJs = sqlJs.default;
+            console.log('✅ 使用 dist 文件导入 sql.js');
+          }
+        } catch (error) {
+          console.log('❌ dist 文件导入失败:', error);
+        }
+      }
+      
+      if (!initSqlJs || typeof initSqlJs !== 'function') {
+        throw new Error('无法通过任何方式导入 sql.js 的 initSqlJs 函数。请检查 sql.js 包是否正确安装。');
       }
       
       this.SQL = await initSqlJs({
