@@ -52,6 +52,8 @@ class SQLiteDatabase {
         initSqlJs = sqlJsModule;
       } else if (typeof sqlJsModule.default === 'function') {
         initSqlJs = sqlJsModule.default;
+      } else if (typeof sqlJsModule.initSqlJs === 'function') {
+        initSqlJs = sqlJsModule.initSqlJs;
       } else {
         throw new Error('Could not find initSqlJs function in sql.js module.');
       }
