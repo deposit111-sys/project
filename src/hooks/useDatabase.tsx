@@ -34,7 +34,7 @@ export function useDatabase() {
           ConfirmationService.getAll()
         ]),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Database connection timeout')), 15000)
+          setTimeout(() => reject(new Error('Database connection timeout')), 60000)
         )
       ]);
 
