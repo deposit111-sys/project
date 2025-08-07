@@ -34,7 +34,7 @@ function App() {
     exportData,
     importData,
     clearAllData,
-    getStats
+    getStats,
     optimizeDatabase,
     backupDatabase
   } = useSQLiteDatabase();
