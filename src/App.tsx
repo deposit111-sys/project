@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube } from 'lucide-react';
+import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
 import { useLocalDatabase } from './hooks/useLocalDatabase';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
@@ -12,7 +12,7 @@ import { ScheduleSearch } from './components/ScheduleSearch';
 import { PickupReturnSchedule } from './components/PickupReturnSchedule';
 import { PendingOrdersOverview } from './components/PendingOrdersOverview';
 import { CapacityTestTool } from './components/CapacityTestTool';
-import DataManagement from './components/DataManagement';
+import { DataManagement } from './components/DataManagement';
 
 function App() {
   // 本地数据库 hooks
@@ -111,7 +111,8 @@ function App() {
     { id: 'search', label: '档期检索', icon: Search },
     { id: 'schedule', label: '取还相机目录', icon: CalendarDays },
     { id: 'pending', label: '未还未取统计目录', icon: AlertCircle },
-    { id: 'test', label: '数据库稳定性测试', icon: TestTube }
+    { id: 'test', label: '数据库稳定性测试', icon: TestTube },
+    { id: 'data', label: '数据管理', icon: Database }
   ];
 
   // 如果数据库加载中，显示加载状态
@@ -211,18 +212,6 @@ function App() {
               onAddCamera={addCamera}
               onDeleteCamera={deleteCamera}
             />
-
-            {/* 数据管理 */}
-            <DataManagement
-              cameras={cameras}
-              orders={orders}
-              onAddCamera={addCamera}
-              onAddOrder={addOrder}
-              onImportData={handleImportData}
-              onExportData={exportData}
-              onClearData={clearAllData}
-              getStats={getStats}
-            />
           </div>
 
           {/* 右侧区域 */}
@@ -290,6 +279,18 @@ function App() {
                     orders={orders}
                     onAddCamera={addCamera}
                     onAddOrder={addOrder}
+                  />
+                )}
+                {activeTab === 'data' && (
+                  <DataManagement
+                    cameras={cameras}
+                    orders={orders}
+                    onAddCamera={addCamera}
+                    onAddOrder={addOrder}
+                    onImportData={handleImportData}
+                    onExportData={exportData}
+                    onClearData={clearAllData}
+                    getStats={getStats}
                   />
                 )}
               </div>

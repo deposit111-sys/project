@@ -19,7 +19,7 @@ interface DataManagementProps {
   };
 }
 
-export default function DataManagement({
+export function DataManagement({
   cameras,
   orders,
   onAddCamera,
