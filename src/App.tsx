@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
 import { useSQLiteDatabase } from './hooks/useSQLiteDatabase';
 import { initializeSQLiteDB } from './lib/sqliteDatabase';
+import { initializeSQLiteDB } from './lib/sqliteDatabase';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
@@ -16,6 +17,25 @@ import { CapacityTestTool } from './components/CapacityTestTool';
 import { DataManagement } from './components/DataManagement';
 
 function App() {
+  // 数据库初始化状态
+  const [isDbInitialized, setIsDbInitialized] = useState(false);
+  const [dbInitError, setDbInitError] = useState<string | null>(null);
+
+  // 初始化数据库
+  useEffect(() => {
+    const initDB = async () => {
+      try {
+        await initializeSQLiteDB();
+        setIsDbInitialized(true);
+      } catch (error) {
+        console.error('SQLite 数据库初始化失败:', error);
+        setDbInitError(error instanceof Error ? error.message : '未知错误');
+      }
+    };
+
+    initDB();
+  }, []);
+
   // SQLite 数据库 hooks
   const {
     cameras,
@@ -37,7 +57,7 @@ function App() {
     getStats,
     optimizeDatabase,
     backupDatabase
-  } = useSQLiteDatabase();
+  } = useSQLiteDatabase(isDbInitialized);
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -113,12 +133,19 @@ function App() {
   ];
 
   // 如果数据库加载中，显示加载状态
-  if (loading) {
+  if (!isDbInitialized || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">初始化 SQLite 数据库</h2>
-          <p className="text-gray-600">正在准备 SQLite 数据存储环境...</p>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">
+            {!isDbInitialized ? '初始化 SQLite 数据库' : '加载数据'}
+          </h2>
+          <p className="text-gray-600">
+            {!isDbInitialized ? '正在准备 SQLite 数据存储环境...' : '正在加载数据...'}
+          </p>
+          {dbInitError && (
+            <p className="text-red-600 mt-2">初始化失败: {dbInitError}</p>
+          )}
         </div>
       </div>
     );
