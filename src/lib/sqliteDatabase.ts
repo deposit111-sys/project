@@ -43,19 +43,51 @@ class SQLiteDatabase {
 
   async init(): Promise<void> {
     try {
-      // 导入 sql.js 模块
-      const initSqlJs = await import('sql.js');
+      console.log('🔄 开始初始化 SQLite 数据库...');
       
+      // 动态导入 sql.js
+      const sqlModule = await import('sql.js');
+      console.log('📦 sql.js 模块已导入');
+      
+      // 获取 initSqlJs 函数
+      let initSqlJs;
+      if (typeof sqlModule.default === 'function') {
+        initSqlJs = sqlModule.default;
+        console.log('✅ 使用 default 导出的 initSqlJs');
+      } else if (typeof sqlModule === 'function') {
+        initSqlJs = sqlModule;
+        console.log('✅ 使用直接导出的 initSqlJs');
+      } else if (sqlModule.initSqlJs && typeof sqlModule.initSqlJs === 'function') {
+        initSqlJs = sqlModule.initSqlJs;
+        console.log('✅ 使用命名导出的 initSqlJs');
+      } else {
+        console.error('❌ 无法找到 initSqlJs 函数，模块结构:', sqlModule);
+        throw new Error('无法找到 initSqlJs 函数');
+      }
+
+      // 初始化 SQL.js
       this.SQL = await initSqlJs({
-        locateFile: (file: string) => `https://sql.js.org/dist/${file}`
+        locateFile: (file: string) => {
+          console.log('📁 加载 WASM 文件:', file);
+          return `https://sql.js.org/dist/${file}`;
+        }
       });
+      
+      console.log('✅ SQL.js 初始化成功');
 
       // 尝试从 localStorage 加载现有数据库
       const savedDb = localStorage.getItem(this.dbName);
       if (savedDb) {
         console.log('📂 加载现有 SQLite 数据库...');
-        const uint8Array = new Uint8Array(JSON.parse(savedDb));
-        this.db = new this.SQL.Database(uint8Array);
+        try {
+          const uint8Array = new Uint8Array(JSON.parse(savedDb));
+          this.db = new this.SQL.Database(uint8Array);
+          console.log('✅ 现有数据库加载成功');
+        } catch (error) {
+          console.warn('⚠️ 加载现有数据库失败，创建新数据库:', error);
+          this.db = new this.SQL.Database();
+          await this.createTables();
+        }
       } else {
         console.log('🆕 创建新的 SQLite 数据库...');
         this.db = new this.SQL.Database();
@@ -75,62 +107,67 @@ class SQLiteDatabase {
 
     console.log('📦 创建数据库表结构...');
 
-    // 创建相机表
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS cameras (
-        id TEXT PRIMARY KEY,
-        model TEXT NOT NULL,
-        serial_number TEXT NOT NULL,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(model, serial_number)
-      )
-    `);
+    try {
+      // 创建相机表
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS cameras (
+          id TEXT PRIMARY KEY,
+          model TEXT NOT NULL,
+          serial_number TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(model, serial_number)
+        )
+      `);
 
-    // 创建订单表
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS orders (
-        id TEXT PRIMARY KEY,
-        camera_model TEXT NOT NULL,
-        camera_serial_number TEXT NOT NULL,
-        renter_name TEXT NOT NULL,
-        customer_service TEXT,
-        salesperson TEXT NOT NULL,
-        pickup_date TEXT NOT NULL,
-        pickup_time TEXT CHECK (pickup_time IN ('morning', 'afternoon', 'evening')),
-        return_date TEXT NOT NULL,
-        return_time TEXT CHECK (return_time IN ('morning', 'afternoon', 'evening')),
-        deposit_status TEXT,
-        notes TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+      // 创建订单表
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS orders (
+          id TEXT PRIMARY KEY,
+          camera_model TEXT NOT NULL,
+          camera_serial_number TEXT NOT NULL,
+          renter_name TEXT NOT NULL,
+          customer_service TEXT,
+          salesperson TEXT NOT NULL,
+          pickup_date TEXT NOT NULL,
+          pickup_time TEXT CHECK (pickup_time IN ('morning', 'afternoon', 'evening')),
+          return_date TEXT NOT NULL,
+          return_time TEXT CHECK (return_time IN ('morning', 'afternoon', 'evening')),
+          deposit_status TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
 
-    // 创建确认状态表
-    this.db.run(`
-      CREATE TABLE IF NOT EXISTS confirmations (
-        id TEXT PRIMARY KEY,
-        order_id TEXT NOT NULL UNIQUE,
-        pickup_confirmed INTEGER DEFAULT 0,
-        return_confirmed INTEGER DEFAULT 0,
-        pickup_confirmed_at TEXT,
-        return_confirmed_at TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
-      )
-    `);
+      // 创建确认状态表
+      this.db.run(`
+        CREATE TABLE IF NOT EXISTS confirmations (
+          id TEXT PRIMARY KEY,
+          order_id TEXT NOT NULL UNIQUE,
+          pickup_confirmed INTEGER DEFAULT 0,
+          return_confirmed INTEGER DEFAULT 0,
+          pickup_confirmed_at TEXT,
+          return_confirmed_at TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+        )
+      `);
 
-    // 创建索引
-    this.db.run(`CREATE INDEX IF NOT EXISTS idx_cameras_model ON cameras(model)`);
-    this.db.run(`CREATE INDEX IF NOT EXISTS idx_cameras_serial ON cameras(serial_number)`);
-    this.db.run(`CREATE INDEX IF NOT EXISTS idx_orders_camera ON orders(camera_model, camera_serial_number)`);
-    this.db.run(`CREATE INDEX IF NOT EXISTS idx_orders_dates ON orders(pickup_date, return_date)`);
-    this.db.run(`CREATE INDEX IF NOT EXISTS idx_orders_renter ON orders(renter_name)`);
-    this.db.run(`CREATE INDEX IF NOT EXISTS idx_confirmations_order ON confirmations(order_id)`);
+      // 创建索引
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_cameras_model ON cameras(model)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_cameras_serial ON cameras(serial_number)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_orders_camera ON orders(camera_model, camera_serial_number)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_orders_dates ON orders(pickup_date, return_date)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_orders_renter ON orders(renter_name)`);
+      this.db.run(`CREATE INDEX IF NOT EXISTS idx_confirmations_order ON confirmations(order_id)`);
 
-    console.log('✅ 数据库表结构创建完成');
+      console.log('✅ 数据库表结构创建完成');
+    } catch (error) {
+      console.error('❌ 创建数据库表失败:', error);
+      throw error;
+    }
   }
 
   private async saveToStorage(): Promise<void> {

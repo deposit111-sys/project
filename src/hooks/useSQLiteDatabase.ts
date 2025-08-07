@@ -9,6 +9,7 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
   const [confirmedReturns, setConfirmedReturns] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // 转换数据格式
   const convertSQLiteCameraToCamera = (sqliteCamera: SQLiteCamera): Camera => ({
@@ -35,6 +36,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
 
   // 加载所有数据
   const loadData = useCallback(async () => {
+    if (!isDbInitialized) {
+      console.log('⏳ 等待数据库初始化...');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -55,6 +61,7 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setConfirmedPickups(confirmations.confirmedPickups);
       setConfirmedReturns(confirmations.confirmedReturns);
 
+      setIsInitialized(true);
       console.log('✅ SQLite 数据库数据加载完成:', {
         cameras: convertedCameras.length,
         orders: convertedOrders.length,
@@ -67,10 +74,12 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isDbInitialized]);
 
   // 相机操作
   const addCamera = useCallback(async (camera: Omit<Camera, 'id'>) => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('➕ 添加相机到 SQLite 数据库:', camera);
       const newSQLiteCamera = await sqliteDB.addCamera({
@@ -85,9 +94,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   const deleteCamera = useCallback(async (id: string) => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('🗑️ 从 SQLite 数据库删除相机:', id);
       await sqliteDB.deleteCamera(id);
@@ -97,10 +108,12 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   // 订单操作
   const addOrder = useCallback(async (order: Omit<RentalOrder, 'id' | 'createdAt'>) => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('➕ 添加订单到 SQLite 数据库:', order);
       const newSQLiteOrder = await sqliteDB.addOrder({
@@ -124,9 +137,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   const updateOrder = useCallback(async (id: string, updates: Partial<RentalOrder>) => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('✏️ 更新 SQLite 数据库订单:', id, updates);
       const sqliteUpdates: Partial<SQLiteOrder> = {};
@@ -152,9 +167,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   const deleteOrder = useCallback(async (id: string) => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('🗑️ 从 SQLite 数据库删除订单:', id);
       await sqliteDB.deleteOrder(id);
@@ -167,10 +184,12 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   // 确认状态操作
   const confirmPickup = useCallback(async (orderId: string) => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       const isCurrentlyConfirmed = confirmedPickups.includes(orderId);
       const newState = !isCurrentlyConfirmed;
@@ -188,9 +207,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, [confirmedPickups]);
+  }, [confirmedPickups, isInitialized]);
 
   const confirmReturn = useCallback(async (orderId: string) => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       const isCurrentlyConfirmed = confirmedReturns.includes(orderId);
       const newState = !isCurrentlyConfirmed;
@@ -208,10 +229,12 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, [confirmedReturns]);
+  }, [confirmedReturns, isInitialized]);
 
   // 数据导入导出
   const exportData = useCallback(async () => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('📤 导出 SQLite 数据库数据...');
       const data = await sqliteDB.exportData();
@@ -243,9 +266,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   const importData = useCallback(async (importedCameras: Camera[], importedOrders: RentalOrder[]) => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('📥 导入数据到 SQLite 数据库...');
       
@@ -289,9 +314,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, [loadData]);
+  }, [loadData, isInitialized]);
 
   const clearAllData = useCallback(async () => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('🗑️ 清空 SQLite 数据库...');
       await sqliteDB.clearAllData();
@@ -305,9 +332,18 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   const getStats = useCallback(async () => {
+    if (!isInitialized) {
+      return {
+        cameras: cameras.length,
+        orders: orders.length,
+        confirmations: confirmedPickups.length + confirmedReturns.length,
+        dbSize: '未知'
+      };
+    }
+    
     try {
       return await sqliteDB.getStats();
     } catch (err) {
@@ -319,9 +355,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
         dbSize: '未知'
       };
     }
-  }, [cameras.length, orders.length, confirmedPickups.length, confirmedReturns.length]);
+  }, [cameras.length, orders.length, confirmedPickups.length, confirmedReturns.length, isInitialized]);
 
   const optimizeDatabase = useCallback(async () => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('🔧 优化 SQLite 数据库...');
       await sqliteDB.optimizeDatabase();
@@ -331,9 +369,11 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   const backupDatabase = useCallback(async () => {
+    if (!isInitialized) throw new Error('数据库未初始化');
+    
     try {
       console.log('💾 备份 SQLite 数据库...');
       const backupData = await sqliteDB.backupDatabase();
@@ -356,7 +396,7 @@ export function useSQLiteDatabase(isDbInitialized: boolean) {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [isInitialized]);
 
   // 清除错误
   const clearError = useCallback(() => {
