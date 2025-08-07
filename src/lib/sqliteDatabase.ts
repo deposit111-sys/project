@@ -1,4 +1,3 @@
-const initSqlJs = require('sql.js');
 import type { Database } from 'sql.js';
 
 export interface SQLiteCamera {
@@ -47,6 +46,7 @@ class SQLiteDatabase {
       console.log('🔄 初始化 SQLite 数据库...');
       
       // 初始化 sql.js
+      const initSqlJs = (await import('sql.js')).default;
       this.SQL = await initSqlJs({
         locateFile: (file: string) => `/sql-wasm.wasm`
       });
