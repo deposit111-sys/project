@@ -22,14 +22,40 @@ export function DatabaseStatus({ onConnectionChange }: DatabaseStatusProps) {
 
     setIsChecking(true);
     try {
-      // 使用更简单的连接测试，避免复杂查询
-      const { error } = await Promise.race([
-        supabase.from('cameras').select('id').limit(1),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), 10000)
-        )
-      ]);
+      // 使用更简单的连接测试
+      console.log('Testing Supabase connection...');
+      
+      // 首先测试基本连接
+      const { data, error } = await supabase
+        .from('cameras')
+        .select('count', { count: 'exact', head: true })
+        .limit(0);
+      
       const connected = !error;
+      
+      if (error) {
+        console.warn('Supabase connection test failed:', error.message);
+        // 检查是否是网络问题
+        if (error.message.includes('Failed to fetch') || 
+            error.message.includes('NetworkError') ||
+            error.message.includes('fetch')) {
+          console.log('Network connectivity issue detected');
+        }
+        // 检查是否是认证问题
+        else if (error.message.includes('JWT') || 
+                 error.message.includes('auth') ||
+                 error.message.includes('unauthorized')) {
+          console.log('Authentication issue detected');
+        }
+        // 检查是否是配置问题
+        else if (error.message.includes('relation') || 
+                 error.message.includes('does not exist')) {
+          console.log('Database schema issue detected');
+        }
+      } else {
+        console.log('Supabase connection successful');
+      }
+      
       setIsConnected(connected);
       setLastChecked(new Date());
       
@@ -38,10 +64,7 @@ export function DatabaseStatus({ onConnectionChange }: DatabaseStatusProps) {
         onConnectionChange?.(connected);
       }
     } catch (error) {
-      // 只在开发环境下记录详细错误信息
-      if (import.meta.env.DEV) {
-        console.log('Database connection failed:', error);
-      }
+      console.error('Supabase connection error:', error);
       const wasConnected = isConnected;
       setIsConnected(false);
       setLastChecked(new Date());

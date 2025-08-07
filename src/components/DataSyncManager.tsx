@@ -47,6 +47,11 @@ export function DataSyncManager({
       setRefreshing(true);
       setSyncStatus({ type: 'info', message: '正在获取云端数据统计...' });
 
+      // 首先检查连接状态
+      if (!isSupabaseEnabled || !supabase) {
+        throw new Error('Supabase 未配置或不可用');
+      }
+
       const [cameras, orders] = await Promise.all([
         CameraService.getAll(),
         OrderService.getAll()
@@ -63,9 +68,24 @@ export function DataSyncManager({
         message: `云端数据统计更新成功！相机：${cameras.length.toLocaleString()} 台，订单：${orders.length.toLocaleString()} 个` 
       });
     } catch (error) {
+      console.error('获取云端数据统计失败:', error);
+      let errorMessage = '获取云端数据统计失败';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          errorMessage = '网络连接失败，请检查网络连接';
+        } else if (error.message.includes('JWT') || error.message.includes('auth')) {
+          errorMessage = 'Supabase 认证失败，请检查配置';
+        } else if (error.message.includes('未配置')) {
+          errorMessage = error.message;
+        } else {
+          errorMessage = `连接错误: ${error.message}`;
+        }
+      }
+      
       setSyncStatus({ 
         type: 'error', 
-        message: error instanceof Error ? error.message : '获取云端数据统计失败' 
+        message: errorMessage
       });
     } finally {
       setRefreshing(false);

@@ -18,6 +18,7 @@ import { DataSyncManager } from './components/DataSyncManager';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import { CapacityTestTool } from './components/CapacityTestTool';
 import DataManagement from './components/DataManagement';
+import { SupabaseConnectionDiagnostic } from './components/SupabaseConnectionDiagnostic';
 
 function App() {
   // 本地数据库 hooks
@@ -216,7 +217,10 @@ function App() {
     { id: 'schedule', label: '取还相机目录', icon: CalendarDays },
     { id: 'pending', label: '未还未取统计目录', icon: AlertCircle },
     { id: 'test', label: '数据库稳定性测试', icon: TestTube },
-    ...(isSupabaseEnabled ? [{ id: 'sync', label: '数据同步', icon: Clock }] : [])
+    ...(isSupabaseEnabled ? [
+      { id: 'sync', label: '数据同步', icon: Clock },
+      { id: 'diagnostic', label: 'Supabase诊断', icon: AlertCircle }
+    ] : [])
   ];
 
   const handleSyncComplete = (syncedCameras: CameraType[], syncedOrders: RentalOrder[], syncedPickups: string[], syncedReturns: string[]) => {
@@ -441,6 +445,9 @@ function App() {
                     localConfirmedReturns={localConfirmedReturns}
                     onSyncComplete={handleSyncComplete}
                   />
+                )}
+                {activeTab === 'diagnostic' && isSupabaseEnabled && (
+                  <SupabaseConnectionDiagnostic />
                 )}
               </div>
             </div>

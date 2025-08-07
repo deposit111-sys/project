@@ -17,6 +17,11 @@ export const supabase = isSupabaseEnabled
       db: {
         schema: 'public',
       },
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+      },
       realtime: {
         params: {
           eventsPerSecond: 10,
@@ -25,6 +30,12 @@ export const supabase = isSupabaseEnabled
       global: {
         headers: {
           'X-Client-Info': 'camera-rental-system',
+        },
+        fetch: (url, options = {}) => {
+          return fetch(url, {
+            ...options,
+            signal: AbortSignal.timeout(30000), // 30秒超时
+          });
         },
       },
     })
