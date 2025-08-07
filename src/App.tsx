@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
-import { useRobustDatabase } from './hooks/useRobustDatabase';
+import { useSupabaseDatabase } from './hooks/useSupabaseDatabase';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
@@ -15,7 +15,7 @@ import { CapacityTestTool } from './components/CapacityTestTool';
 import { DataManagement } from './components/DataManagement';
 
 function App() {
-  // 强化数据库 hooks
+  // Supabase 数据库 hooks
   const {
     cameras,
     orders,
@@ -23,7 +23,6 @@ function App() {
     confirmedReturns,
     loading,
     error,
-    systemStatus,
     addCamera,
     deleteCamera,
     addOrder,
@@ -36,9 +35,8 @@ function App() {
     clearAllData,
     getStats,
     optimizeDatabase,
-    backupDatabase,
-    recoverFromSnapshot
-  } = useRobustDatabase();
+    backupDatabase
+  } = useSupabaseDatabase();
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -119,38 +117,19 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            初始化强化数据库系统
+            连接 Supabase 云端数据库
           </h2>
           <p className="text-gray-600">
-            正在准备高性能数据存储环境...
+            正在建立安全的云端数据库连接...
           </p>
           {error && (
-            <p className="text-red-600 mt-2">初始化失败: {error}</p>
-          )}
-          
-          {/* 系统状态显示 */}
-          <div className="mt-4 p-4 bg-white rounded-lg shadow-sm">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium">待处理操作:</span>
-                <span className="ml-2 text-blue-600">{systemStatus.pendingOperations}</span>
-              </div>
-              <div>
-                <span className="font-medium">系统状态:</span>
-                <span className={`ml-2 ${systemStatus.isHealthy ? 'text-green-600' : 'text-red-600'}`}>
-                  {systemStatus.isHealthy ? '健康' : '异常'}
-                </span>
-              </div>
-              <div>
-                <span className="font-medium">数据库大小:</span>
-                <span className="ml-2 text-gray-600">{systemStatus.dbSize}</span>
-              </div>
-              <div>
-                <span className="font-medium">最新快照:</span>
-                <span className="ml-2 text-gray-600">{systemStatus.lastSnapshot || '无'}</span>
-              </div>
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 font-medium">连接失败: {error}</p>
+              <p className="text-sm text-red-500 mt-2">
+                请确保已正确配置 Supabase 环境变量，或点击右上角的"Connect to Supabase"按钮进行配置
+              </p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -162,22 +141,7 @@ function App() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">相机租赁管理系统</h1>
-            <div className="flex items-center mt-2 space-x-4 text-sm">
-              <div className="flex items-center">
-                <div className={`w-2 h-2 rounded-full mr-2 ${systemStatus.isHealthy ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className="text-gray-600">
-                  系统状态: {systemStatus.isHealthy ? '健康' : '异常'}
-                </span>
-              </div>
-              {systemStatus.pendingOperations > 0 && (
-                <div className="flex items-center">
-                  <div className="w-2 h-2 rounded-full mr-2 bg-yellow-500 animate-pulse"></div>
-                  <span className="text-gray-600">
-                    待处理: {systemStatus.pendingOperations} 个操作
-                  </span>
-                </div>
-              )}
-            </div>
+            <p className="text-gray-600 mt-1">基于 Supabase 云端 PostgreSQL 数据库</p>
           </div>
           <div className="flex items-center space-x-4">
             <button
@@ -314,8 +278,6 @@ function App() {
                     getStats={getStats}
                     optimizeDatabase={optimizeDatabase}
                     backupDatabase={backupDatabase}
-                    systemStatus={systemStatus}
-                    onRecoverFromSnapshot={recoverFromSnapshot}
                   />
                 )}
               </div>
