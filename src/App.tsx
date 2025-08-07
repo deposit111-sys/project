@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube } from 'lucide-react';
-import { useLocalDatabase } from './hooks/useLocalDatabase';
-import { initializeLocalDB } from './lib/indexedDB';
+import { useSQLiteDatabase } from './hooks/useSQLiteDatabase';
+import { initializeSQLiteDB } from './lib/sqliteDB';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
@@ -16,61 +16,63 @@ import { CapacityTestTool } from './components/CapacityTestTool';
 import DataManagement from './components/DataManagement';
 
 function App() {
-  // 本地数据库 hooks
+  // SQLite数据库 hooks
   const {
-    cameras: localCameras,
-    orders: localOrders,
-    confirmedPickups: localConfirmedPickups,
-    confirmedReturns: localConfirmedReturns,
-    loading: localLoading,
-    error: localError,
-    addCamera: addLocalCamera,
-    deleteCamera: deleteLocalCamera,
-    addOrder: addLocalOrder,
-    updateOrder: updateLocalOrder,
-    deleteOrder: deleteLocalOrder,
-    confirmPickup: confirmLocalPickup,
-    confirmReturn: confirmLocalReturn,
-    exportData: exportLocalData,
-    importData: importLocalData,
-    clearAllData: clearLocalData,
-    getStats: getLocalStats,
-    clearError: clearLocalError
-  } = useLocalDatabase();
+    cameras: sqliteCameras,
+    orders: sqliteOrders,
+    confirmedPickups: sqliteConfirmedPickups,
+    confirmedReturns: sqliteConfirmedReturns,
+    loading: sqliteLoading,
+    error: sqliteError,
+    addCamera: addSQLiteCamera,
+    deleteCamera: deleteSQLiteCamera,
+    addOrder: addSQLiteOrder,
+    updateOrder: updateSQLiteOrder,
+    deleteOrder: deleteSQLiteOrder,
+    confirmPickup: confirmSQLitePickup,
+    confirmReturn: confirmSQLiteReturn,
+    exportData: exportSQLiteData,
+    importData: importSQLiteData,
+    clearAllData: clearSQLiteData,
+    getStats: getSQLiteStats,
+    optimizeDatabase,
+    backupDatabase,
+    clearError: clearSQLiteError
+  } = useSQLiteDatabase();
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [activeTab, setActiveTab] = useState('calendar');
   const [dbInitialized, setDbInitialized] = useState(false);
 
-  // 使用本地数据库
-  const cameras = localCameras;
-  const orders = localOrders;
-  const confirmedPickups = localConfirmedPickups;
-  const confirmedReturns = localConfirmedReturns;
-  const loading = localLoading;
-  const error = localError;
+  // 使用SQLite数据库
+  const cameras = sqliteCameras;
+  const orders = sqliteOrders;
+  const confirmedPickups = sqliteConfirmedPickups;
+  const confirmedReturns = sqliteConfirmedReturns;
+  const loading = sqliteLoading;
+  const error = sqliteError;
 
-  // 应用启动时初始化本地数据库
+  // 应用启动时初始化SQLite数据库
   React.useEffect(() => {
     const initDB = async () => {
       try {
-        console.log('🚀 初始化本地数据库...');
-        await initializeLocalDB();
+        console.log('🚀 初始化SQLite数据库...');
+        await initializeSQLiteDB();
         setDbInitialized(true);
-        console.log('✅ 本地数据库初始化完成');
+        console.log('✅ SQLite数据库初始化完成');
       } catch (error) {
-        console.error('❌ 本地数据库初始化失败:', error);
+        console.error('❌ SQLite数据库初始化失败:', error);
       }
     };
 
     initDB();
   }, []);
 
-  // 显示当前数据统计
+  // 显示当前SQLite数据库统计
   React.useEffect(() => {
     if (dbInitialized) {
-      console.log('📊 当前本地数据库统计:', {
+      console.log('📊 当前SQLite数据库统计:', {
         cameras: cameras.length,
         orders: orders.length,
         confirmedPickups: confirmedPickups.length,
@@ -79,22 +81,22 @@ function App() {
     }
   }, [dbInitialized, cameras.length, orders.length, confirmedPickups.length, confirmedReturns.length]);
 
-  // 数据操作函数 - 根据当前模式选择对应的操作
-  const addCamera = addLocalCamera;
+  // 数据操作函数 - 使用SQLite数据库操作
+  const addCamera = addSQLiteCamera;
 
-  const deleteCamera = deleteLocalCamera;
+  const deleteCamera = deleteSQLiteCamera;
 
-  const addOrder = addLocalOrder;
+  const addOrder = addSQLiteOrder;
 
-  const updateOrder = updateLocalOrder;
+  const updateOrder = updateSQLiteOrder;
 
-  const deleteOrder = deleteLocalOrder;
+  const deleteOrder = deleteSQLiteOrder;
 
-  const confirmPickup = confirmLocalPickup;
+  const confirmPickup = confirmSQLitePickup;
 
-  const confirmReturn = confirmLocalReturn;
+  const confirmReturn = confirmSQLiteReturn;
 
-  const clearError = clearLocalError;
+  const clearError = clearSQLiteError;
 
   const handleSwitchToCalendar = (model: string, date: string) => {
     // 切换到日历标签页
@@ -104,7 +106,7 @@ function App() {
   };
 
   const handleImportData = async (importedCameras: CameraType[], importedOrders: RentalOrder[]) => {
-    await importLocalData(importedCameras, importedOrders);
+    await importSQLiteData(importedCameras, importedOrders);
   };
 
   const handleExportExcel = () => {
@@ -125,8 +127,8 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">初始化本地数据库</h2>
-          <p className="text-gray-600">正在准备数据存储环境...</p>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">初始化SQLite数据库</h2>
+          <p className="text-gray-600">正在准备高性能数据存储环境...</p>
         </div>
       </div>
     );
@@ -138,10 +140,10 @@ function App() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">相机租赁管理系统</h1>
           <div className="flex items-center space-x-4">
-            {/* 本地数据库状态显示 */}
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-blue-100">
-              <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-              <span className="text-sm font-medium text-blue-800">本地数据库</span>
+            {/* SQLite数据库状态显示 */}
+            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-green-100">
+              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+              <span className="text-sm font-medium text-green-800">SQLite数据库</span>
             </div>
             
             <button
@@ -224,9 +226,9 @@ function App() {
               onAddCamera={addCamera}
               onAddOrder={addOrder}
               onImportData={handleImportData}
-              onExportData={exportLocalData}
-              onClearData={clearLocalData}
-              getStats={getLocalStats}
+              onExportData={exportSQLiteData}
+              onClearData={clearSQLiteData}
+              getStats={getSQLiteStats}
             />
           </div>
 

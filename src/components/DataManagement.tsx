@@ -68,7 +68,7 @@ export default function DataManagement({
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-2 mb-6">
         <Database className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-800">数据管理</h2>
+        <h2 className="text-xl font-semibold text-gray-800">SQLite数据管理</h2>
       </div>
 
       {/* 数据统计 */}
@@ -166,8 +166,9 @@ export default function DataManagement({
         <ul className="text-sm text-gray-600 space-y-1">
           <li>• <strong>导出数据</strong>：将所有相机和订单数据导出为JSON文件</li>
           <li>• <strong>导入数据</strong>：从JSON文件导入数据（会覆盖现有数据）</li>
-          <li>• <strong>清空数据</strong>：删除所有本地数据（需要二次确认）</li>
+          <li>• <strong>清空数据</strong>：删除所有SQLite数据（需要二次确认）</li>
           <li>• 数据统计实时更新，显示当前系统状态</li>
+          <li>• SQLite提供更高的数据稳定性和查询性能</li>
         </ul>
       </div>
     </div>
