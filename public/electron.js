@@ -11,10 +11,12 @@ function createWindow() {
     height: 900,
     minWidth: 1200,
     minHeight: 800,
+    title: '相机租赁管理系统',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
+      nodeIntegration: true,
       webSecurity: true
     },
     icon: path.join(__dirname, 'favicon.ico'), // 应用图标

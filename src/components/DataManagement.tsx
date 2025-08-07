@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Download, Upload, Trash2, Database, AlertTriangle, BarChart3, Settings, Archive } from 'lucide-react';
 import { Camera, RentalOrder } from '../types';
 
+// 检查是否在 Electron 环境中
+const isElectron = () => {
+  return typeof window !== 'undefined' && window.process && window.process.type;
+};
+
 interface DataManagementProps {
   cameras: Camera[];
   orders: RentalOrder[];
@@ -18,6 +23,7 @@ interface DataManagementProps {
   }>;
   optimizeDatabase: () => Promise<void>;
   backupDatabase: () => Promise<void>;
+  getDatabasePath?: () => string;
 }
 
 export function DataManagement({
@@ -31,6 +37,7 @@ export function DataManagement({
   getStats,
   optimizeDatabase,
   backupDatabase,
+  getDatabasePath,
 }: DataManagementProps) {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -119,15 +126,15 @@ export function DataManagement({
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-2 mb-6">
         <Database className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-800">IndexedDB 本地数据库管理</h2>
+        <h2 className="text-xl font-semibold text-gray-800">SQLite 本地数据库管理</h2>
         <div className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          本地 IndexedDB
+          本地 SQLite
         </div>
       </div>
 
       {/* 数据库信息概览 */}
       <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-        <h3 className="font-medium text-gray-800 mb-3">本地数据库特性</h3>
+        <h3 className="font-medium text-gray-800 mb-3">SQLite 数据库特性</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">✓</div>
@@ -142,6 +149,18 @@ export function DataManagement({
             <div className="text-gray-600">数据安全</div>
           </div>
         </div>
+        
+        {/* 数据库文件路径 */}
+        {isElectron() && getDatabasePath && (
+          <div className="mt-4 p-3 bg-white rounded-lg border border-blue-100">
+            <div className="text-sm">
+              <div className="font-medium text-gray-700 mb-1">数据库文件位置:</div>
+              <div className="text-xs text-gray-600 break-all font-mono bg-gray-50 p-2 rounded">
+                {getDatabasePath()}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 数据统计 */}
@@ -253,14 +272,14 @@ export function DataManagement({
           IndexedDB 本地数据库说明
         </h3>
         <ul className="text-sm text-gray-600 space-y-1">
-          <li>• <strong>导出数据</strong>：将本地数据库数据导出为 JSON 文件</li>
-          <li>• <strong>导入数据</strong>：从 JSON 文件导入数据到本地数据库</li>
-          <li>• <strong>优化数据库</strong>：IndexedDB 自动优化，无需手动操作</li>
-          <li>• <strong>备份数据库</strong>：导出完整的数据库备份文件</li>
-          <li>• <strong>清空数据</strong>：删除所有本地数据（需要二次确认）</li>
-          <li>• 基于浏览器原生 IndexedDB API，支持离线使用和快速访问</li>
-          <li>• 支持大量数据的本地存储，具有事务保证和索引优化</li>
-          <li>• 数据存储在浏览器本地，确保隐私安全和快速响应</li>
+          <li>• <strong>导出数据</strong>：将 SQLite 数据库数据导出为 JSON 文件</li>
+          <li>• <strong>导入数据</strong>：从 JSON 文件导入数据到 SQLite 数据库</li>
+          <li>• <strong>优化数据库</strong>：执行 VACUUM 和 ANALYZE 优化数据库</li>
+          <li>• <strong>备份数据库</strong>：创建完整的 .db 文件备份</li>
+          <li>• <strong>清空数据</strong>：删除所有数据表中的数据（需要二次确认）</li>
+          <li>• 基于 SQLite 数据库，支持 SQL 查询和事务处理</li>
+          <li>• 数据存储在单个 .db 文件中，便于备份和迁移</li>
+          <li>• 支持外键约束和索引优化，确保数据完整性</li>
         </ul>
       </div>
     </div>
