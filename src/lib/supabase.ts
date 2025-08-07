@@ -39,7 +39,7 @@ export const getSupabaseConfig = () => {
     };
   }
 
-  if (supabaseUrl === 'your-supabase-url' || supabaseAnonKey === 'your-supabase-anon-key') {
+  if (supabaseUrl === 'your_supabase_project_url' || supabaseAnonKey === 'your_supabase_anon_key') {
     return {
       isConfigured: false,
       error: '请将 .env 文件中的占位符替换为实际的 Supabase 配置值。'

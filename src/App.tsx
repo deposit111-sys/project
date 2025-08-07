@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle } from 'lucide-react';
 import { useLocalDatabase } from './hooks/useLocalDatabase';
+import { useDatabase } from './hooks/useDatabase';
+import { isSupabaseEnabled } from './lib/supabase';
 import { initializeLocalDB } from './lib/indexedDB';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
@@ -12,35 +14,66 @@ import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { ScheduleSearch } from './components/ScheduleSearch';
 import { PickupReturnSchedule } from './components/PickupReturnSchedule';
 import { PendingOrdersOverview } from './components/PendingOrdersOverview';
+import { DataSyncManager } from './components/DataSyncManager';
+import { DatabaseStatus } from './components/DatabaseStatus';
 import DataManagement from './components/DataManagement';
 
 function App() {
   // 本地数据库 hooks
   const {
-    cameras,
-    orders,
-    confirmedPickups,
-    confirmedReturns,
-    loading,
-    error,
-    addCamera,
-    deleteCamera,
-    addOrder,
-    updateOrder,
-    deleteOrder,
-    confirmPickup,
-    confirmReturn,
-    exportData,
-    importData,
-    clearAllData,
-    getStats,
-    clearError
+    cameras: localCameras,
+    orders: localOrders,
+    confirmedPickups: localConfirmedPickups,
+    confirmedReturns: localConfirmedReturns,
+    loading: localLoading,
+    error: localError,
+    addCamera: addLocalCamera,
+    deleteCamera: deleteLocalCamera,
+    addOrder: addLocalOrder,
+    updateOrder: updateLocalOrder,
+    deleteOrder: deleteLocalOrder,
+    confirmPickup: confirmLocalPickup,
+    confirmReturn: confirmLocalReturn,
+    exportData: exportLocalData,
+    importData: importLocalData,
+    clearAllData: clearLocalData,
+    getStats: getLocalStats,
+    clearError: clearLocalError
   } = useLocalDatabase();
+  
+  // Supabase云端数据库 hooks
+  const {
+    cameras: cloudCameras,
+    orders: cloudOrders,
+    confirmedPickups: cloudConfirmedPickups,
+    confirmedReturns: cloudConfirmedReturns,
+    loading: cloudLoading,
+    error: cloudError,
+    addCamera: addCloudCamera,
+    deleteCamera: deleteCloudCamera,
+    addOrder: addCloudOrder,
+    updateOrder: updateCloudOrder,
+    deleteOrder: deleteCloudOrder,
+    confirmPickup: confirmCloudPickup,
+    confirmReturn: confirmCloudReturn,
+    clearError: clearCloudError,
+    loadData: loadCloudData
+  } = useDatabase();
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [activeTab, setActiveTab] = useState('calendar');
   const [dbInitialized, setDbInitialized] = useState(false);
+  const [useCloudDatabase, setUseCloudDatabase] = useState(isSupabaseEnabled);
+  const [isCloudConnected, setIsCloudConnected] = useState(false);
+
+  // 根据设置选择使用的数据源
+  const cameras = useCloudDatabase && isCloudConnected ? cloudCameras : localCameras;
+  const orders = useCloudDatabase && isCloudConnected ? cloudOrders : localOrders;
+  const confirmedPickups = useCloudDatabase && isCloudConnected ? cloudConfirmedPickups : localConfirmedPickups;
+  const confirmedReturns = useCloudDatabase && isCloudConnected ? cloudConfirmedReturns : localConfirmedReturns;
+  const loading = useCloudDatabase && isCloudConnected ? cloudLoading : localLoading;
+  const error = useCloudDatabase && isCloudConnected ? cloudError : localError;
 
   // 应用启动时初始化本地数据库
   React.useEffect(() => {
@@ -70,6 +103,97 @@ function App() {
     }
   }, [dbInitialized, cameras.length, orders.length, confirmedPickups.length, confirmedReturns.length]);
 
+  // 数据操作函数 - 根据当前模式选择对应的操作
+  const addCamera = async (camera: Omit<CameraType, 'id'>) => {
+    if (useCloudDatabase && isCloudConnected) {
+      const newCamera = await addCloudCamera(camera);
+      // 同时保存到本地数据库作为备份
+      await addLocalCamera(camera);
+      return newCamera;
+    } else {
+      return await addLocalCamera(camera);
+    }
+  };
+
+  const deleteCamera = async (id: string) => {
+    if (useCloudDatabase && isCloudConnected) {
+      await deleteCloudCamera(id);
+      // 同时从本地数据库删除
+      const localCamera = localCameras.find(c => c.id === id);
+      if (localCamera) {
+        await deleteLocalCamera(id);
+      }
+    } else {
+      await deleteLocalCamera(id);
+    }
+  };
+
+  const addOrder = async (order: Omit<RentalOrder, 'id' | 'createdAt'>) => {
+    if (useCloudDatabase && isCloudConnected) {
+      const newOrder = await addCloudOrder(order);
+      // 同时保存到本地数据库作为备份
+      await addLocalOrder(order);
+      return newOrder;
+    } else {
+      return await addLocalOrder(order);
+    }
+  };
+
+  const updateOrder = async (id: string, updates: Partial<RentalOrder>) => {
+    if (useCloudDatabase && isCloudConnected) {
+      const updatedOrder = await updateCloudOrder(id, updates);
+      // 同时更新本地数据库
+      const localOrder = localOrders.find(o => o.id === id);
+      if (localOrder) {
+        await updateLocalOrder(id, updates);
+      }
+      return updatedOrder;
+    } else {
+      return await updateLocalOrder(id, updates);
+    }
+  };
+
+  const deleteOrder = async (id: string) => {
+    if (useCloudDatabase && isCloudConnected) {
+      await deleteCloudOrder(id);
+      // 同时从本地数据库删除
+      const localOrder = localOrders.find(o => o.id === id);
+      if (localOrder) {
+        await deleteLocalOrder(id);
+      }
+    } else {
+      await deleteLocalOrder(id);
+    }
+  };
+
+  const confirmPickup = async (orderId: string) => {
+    if (useCloudDatabase && isCloudConnected) {
+      await confirmCloudPickup(orderId);
+      // 同时更新本地数据库
+      await confirmLocalPickup(orderId);
+    } else {
+      await confirmLocalPickup(orderId);
+    }
+  };
+
+  const confirmReturn = async (orderId: string) => {
+    if (useCloudDatabase && isCloudConnected) {
+      await confirmCloudReturn(orderId);
+      // 同时更新本地数据库
+      await confirmLocalReturn(orderId);
+    } else {
+      await confirmLocalReturn(orderId);
+    }
+  };
+
+  const clearError = () => {
+    if (useCloudDatabase && isCloudConnected) {
+      clearCloudError();
+    } else {
+      clearLocalError();
+    }
+  };
+
   const handleSwitchToCalendar = (model: string, date: string) => {
     // 切换到日历标签页
     setActiveTab('calendar');
@@ -78,7 +202,7 @@ function App() {
   };
 
   const handleImportData = async (importedCameras: CameraType[], importedOrders: RentalOrder[]) => {
-    await importData(importedCameras, importedOrders);
+    await importLocalData(importedCameras, importedOrders);
   };
 
   const handleExportExcel = () => {
@@ -89,8 +213,14 @@ function App() {
     { id: 'calendar', label: '相机档期日历', icon: Calendar },
     { id: 'search', label: '档期检索', icon: Search },
     { id: 'schedule', label: '取还相机目录', icon: CalendarDays },
-    { id: 'pending', label: '未还未取统计目录', icon: AlertCircle }
+    { id: 'pending', label: '未还未取统计目录', icon: AlertCircle },
+    ...(isSupabaseEnabled ? [{ id: 'sync', label: '数据同步', icon: Clock }] : [])
   ];
+
+  const handleSyncComplete = (syncedCameras: CameraType[], syncedOrders: RentalOrder[], syncedPickups: string[], syncedReturns: string[]) => {
+    // 同步完成后的处理逻辑
+    console.log('数据同步完成');
+  };
 
   // 如果数据库未初始化，显示加载状态
   if (!dbInitialized) {
@@ -111,10 +241,32 @@ function App() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">相机租赁管理系统</h1>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-green-100">
-              <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm font-medium text-green-800">本地数据库</span>
-            </div>
+            {/* 数据库状态显示 */}
+            {isSupabaseEnabled && (
+              <DatabaseStatus onConnectionChange={setIsCloudConnected} />
+            )}
+            {!isSupabaseEnabled && (
+              <div className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-blue-100">
+                <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                <span className="text-sm font-medium text-blue-800">本地数据库</span>
+              </div>
+            )}
+            
+            {/* 数据库模式切换 */}
+            {isSupabaseEnabled && (
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">数据源:</label>
+                <select
+                  value={useCloudDatabase ? 'cloud' : 'local'}
+                  onChange={(e) => setUseCloudDatabase(e.target.value === 'cloud')}
+                  className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                >
+                  <option value="local">本地数据库</option>
+                  <option value="cloud" disabled={!isCloudConnected}>云端数据库</option>
+                </select>
+              </div>
+            )}
+            
             <button
               onClick={handleExportExcel}
               className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 shadow-sm hover:shadow-md"
@@ -195,10 +347,21 @@ function App() {
               onAddCamera={addCamera}
               onAddOrder={addOrder}
               onImportData={handleImportData}
-              onExportData={exportData}
-              onClearData={clearAllData}
-              getStats={getStats}
+              onExportData={exportLocalData}
+              onClearData={clearLocalData}
+              getStats={getLocalStats}
             />
+            
+            {/* 数据同步管理 - 仅在Supabase可用时显示 */}
+            {isSupabaseEnabled && (
+              <DataSyncManager
+                localCameras={localCameras}
+                localOrders={localOrders}
+                localConfirmedPickups={localConfirmedPickups}
+                localConfirmedReturns={localConfirmedReturns}
+                onSyncComplete={handleSyncComplete}
+              />
+            )}
           </div>
 
           {/* 右侧区域 */}
@@ -258,6 +421,15 @@ function App() {
                     confirmedReturns={confirmedReturns}
                     onConfirmPickup={confirmPickup}
                     onConfirmReturn={confirmReturn}
+                  />
+                )}
+                {activeTab === 'sync' && isSupabaseEnabled && (
+                  <DataSyncManager
+                    localCameras={localCameras}
+                    localOrders={localOrders}
+                    localConfirmedPickups={localConfirmedPickups}
+                    localConfirmedReturns={localConfirmedReturns}
+                    onSyncComplete={handleSyncComplete}
                   />
                 )}
               </div>
