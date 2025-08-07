@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
-import { useLocalDatabase } from './hooks/useLocalDatabase';
+import { useSQLiteDatabase } from './hooks/useSQLiteDatabase';
+import { initializeSQLiteDB } from './lib/sqliteDatabase';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
@@ -15,7 +16,7 @@ import { CapacityTestTool } from './components/CapacityTestTool';
 import { DataManagement } from './components/DataManagement';
 
 function App() {
-  // 本地数据库 hooks
+  // SQLite 数据库 hooks
   const {
     cameras,
     orders,
@@ -34,7 +35,9 @@ function App() {
     importData,
     clearAllData,
     getStats
-  } = useLocalDatabase();
+    optimizeDatabase,
+    backupDatabase
+  } = useSQLiteDatabase();
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -46,6 +49,18 @@ function App() {
     upcomingPickups: 0,
     upcomingReturns: 0
   });
+
+  // 初始化 SQLite 数据库
+  useEffect(() => {
+    const initDB = async () => {
+      try {
+        await initializeSQLiteDB();
+      } catch (error) {
+        console.error('SQLite 数据库初始化失败:', error);
+      }
+    };
+    initDB();
+  }, []);
 
   // 计算详细统计信息
   useEffect(() => {
@@ -114,8 +129,8 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">初始化本地数据库</h2>
-          <p className="text-gray-600">正在准备数据存储环境...</p>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">初始化 SQLite 数据库</h2>
+          <p className="text-gray-600">正在准备 SQLite 数据存储环境...</p>
         </div>
       </div>
     );
@@ -259,6 +274,8 @@ function App() {
                     onExportData={exportData}
                     onClearData={clearAllData}
                     getStats={getStats}
+                    optimizeDatabase={optimizeDatabase}
+                    backupDatabase={backupDatabase}
                   />
                 )}
               </div>
