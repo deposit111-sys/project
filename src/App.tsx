@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, Clock, Download, Calendar, Search, CalendarDays, AlertCircle, TestTube, Database } from 'lucide-react';
-import { useSQLiteDatabase } from './hooks/useSQLiteDatabase';
-import { initializeSQLiteDB } from './lib/sqliteDatabase';
+import { useLocalDatabase } from './hooks/useLocalDatabase';
+import { initializeLocalDB } from './lib/indexedDB';
 import { Camera as CameraType, RentalOrder } from './types';
 import { exportToExcel } from './utils/exportUtils';
 import { StatCard } from './components/StatCard';
@@ -24,10 +24,10 @@ function App() {
   useEffect(() => {
     const initDB = async () => {
       try {
-        await initializeSQLiteDB();
+        await initializeLocalDB();
         setIsDbInitialized(true);
       } catch (error) {
-        console.error('SQLite 数据库初始化失败:', error);
+        console.error('IndexedDB 数据库初始化失败:', error);
         setDbInitError(error instanceof Error ? error.message : '未知错误');
       }
     };
@@ -35,7 +35,7 @@ function App() {
     initDB();
   }, []);
 
-  // SQLite 数据库 hooks
+  // IndexedDB 数据库 hooks
   const {
     cameras,
     orders,
@@ -56,7 +56,7 @@ function App() {
     getStats,
     optimizeDatabase,
     backupDatabase
-  } = useSQLiteDatabase(isDbInitialized);
+  } = useLocalDatabase();
   
   // UI 状态
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -137,10 +137,10 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-800 mb-2">
-            {!isDbInitialized ? '初始化 SQLite 数据库' : '加载数据'}
+            {!isDbInitialized ? '初始化 IndexedDB 数据库' : '加载数据'}
           </h2>
           <p className="text-gray-600">
-            {!isDbInitialized ? '正在准备 SQLite 数据存储环境...' : '正在加载数据...'}
+            {!isDbInitialized ? '正在准备 IndexedDB 数据存储环境...' : '正在加载数据...'}
           </p>
           {dbInitError && (
             <p className="text-red-600 mt-2">初始化失败: {dbInitError}</p>

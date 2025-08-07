@@ -119,7 +119,7 @@ export function DataManagement({
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center gap-2 mb-6">
         <Database className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-800">SQLite 数据库管理</h2>
+        <h2 className="text-xl font-semibold text-gray-800">IndexedDB 数据库管理</h2>
       </div>
 
       {/* 数据统计 */}
@@ -228,15 +228,15 @@ export function DataManagement({
       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
         <h3 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />
-          SQLite 数据库说明
+          IndexedDB 数据库说明
         </h3>
         <ul className="text-sm text-gray-600 space-y-1">
-          <li>• <strong>导出数据</strong>：将 SQLite 数据库数据导出为 JSON 文件</li>
-          <li>• <strong>导入数据</strong>：从 JSON 文件导入数据到 SQLite 数据库</li>
-          <li>• <strong>优化数据库</strong>：执行 VACUUM 和 ANALYZE 优化数据库性能</li>
-          <li>• <strong>备份数据库</strong>：创建完整的 SQLite 数据库备份文件</li>
+          <li>• <strong>导出数据</strong>：将 IndexedDB 数据库数据导出为 JSON 文件</li>
+          <li>• <strong>导入数据</strong>：从 JSON 文件导入数据到 IndexedDB 数据库</li>
+          <li>• <strong>优化数据库</strong>：IndexedDB 自动优化，无需手动操作</li>
+          <li>• <strong>备份数据库</strong>：创建完整的 IndexedDB 数据库备份文件</li>
           <li>• <strong>清空数据</strong>：删除所有本地数据（需要二次确认）</li>
-          <li>• 数据存储在浏览器的 SQLite 数据库中，具有企业级稳定性</li>
+          <li>• 数据存储在浏览器的 IndexedDB 数据库中，具有良好的稳定性和性能</li>
         </ul>
       </div>
     </div>

@@ -292,6 +292,39 @@ export function useLocalDatabase() {
     }
   }, [cameras.length, orders.length, confirmedPickups.length, confirmedReturns.length]);
 
+  // 数据库优化（IndexedDB 不需要优化，返回成功）
+  const optimizeDatabase = useCallback(async () => {
+    console.log('✅ IndexedDB 不需要优化操作');
+    return Promise.resolve();
+  }, []);
+
+  // 数据库备份（导出数据作为备份）
+  const backupDatabase = useCallback(async () => {
+    try {
+      console.log('💾 创建 IndexedDB 数据备份...');
+      const data = await localDB.exportData();
+      
+      const dataStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `indexeddb_backup_${new Date().toISOString().split('T')[0]}.json`;
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+      console.log('✅ IndexedDB 数据备份完成');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '数据库备份失败';
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
+
   // 清除错误
   const clearError = useCallback(() => {
     setError(null);
@@ -329,6 +362,8 @@ export function useLocalDatabase() {
     importData,
     clearAllData,
     getStats,
+    optimizeDatabase,
+    backupDatabase,
     
     // 工具函数
     clearError,
