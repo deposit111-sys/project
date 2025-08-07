@@ -75,7 +75,7 @@ export function CameraManagement({ cameras, onAddCamera, onDeleteCamera }: Camer
       if (!isNaN(aNum) && !isNaN(bNum)) {
         return aNum - bNum; // 数字升序
       } else {
-        return a.serialNumber.localeCompare(b.serialNumber); // 字符串升序
+        return (a.serialNumber || '').localeCompare(b.serialNumber || ''); // 字符串升序
       }
     });
   });

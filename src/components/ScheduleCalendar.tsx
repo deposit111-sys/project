@@ -154,7 +154,7 @@ export function ScheduleCalendar({ cameras, orders, confirmedReturns = [] }: Sch
         if (!isNaN(aNum) && !isNaN(bNum)) {
           return aNum - bNum; // 数字升序
         } else {
-          return a.serialNumber.localeCompare(b.serialNumber); // 字符串升序
+          return (a.serialNumber || '').localeCompare(b.serialNumber || ''); // 字符串升序
         }
       });
     });
