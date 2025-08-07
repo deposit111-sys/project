@@ -41,6 +41,8 @@ class SQLiteDatabase {
   private SQL: any = null;
   private dbName = 'camera_rental.db';
 
+  async init(): Promise<void> {
+    try {
       // 尝试多种方式导入 sql.js
       let initSqlJs: any = null;
       
