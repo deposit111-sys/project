@@ -1,4 +1,5 @@
-import initSqlJs, { Database } from 'sql.js';
+import * as initSqlJs from 'sql.js';
+import type { Database } from 'sql.js';
 
 export interface SQLiteCamera {
   id: string;
