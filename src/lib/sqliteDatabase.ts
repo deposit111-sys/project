@@ -45,17 +45,27 @@ class SQLiteDatabase {
     try {
       console.log('🔄 初始化 SQLite 数据库...');
       
-      // 导入整个模块
-      const sqlModule = await import('sql.js');
-      
-      // 尝试不同的导入方式
+      // 尝试直接导入 initSqlJs 函数
       let initSqlJs;
-      if (typeof sqlModule.default === 'function') {
-        initSqlJs = sqlModule.default;
-      } else if (typeof sqlModule === 'function') {
-        initSqlJs = sqlModule;
-      } else {
-        throw new Error('无法找到 initSqlJs 函数');
+      try {
+        // 方法1: 尝试命名导入
+        const { default: sqlJsInit } = await import('sql.js');
+        initSqlJs = sqlJsInit;
+      } catch (error) {
+        try {
+          // 方法2: 尝试整个模块导入
+          const sqlModule = await import('sql.js');
+          initSqlJs = sqlModule.default || sqlModule;
+        } catch (error2) {
+          // 方法3: 尝试动态导入
+          const sqlJs = await import('sql.js');
+          initSqlJs = sqlJs.initSqlJs || sqlJs.default || sqlJs;
+        }
+      }
+      
+      if (typeof initSqlJs !== 'function') {
+        console.error('SQL.js 模块结构:', await import('sql.js'));
+        throw new Error('无法找到有效的 initSqlJs 函数');
       }
       
       this.SQL = await initSqlJs({
